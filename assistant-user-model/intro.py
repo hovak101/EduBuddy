@@ -12,10 +12,12 @@ response = openai.ChatCompletion.create(
     #decide which system, assistant to use.
 
     messages=[
+        {"role": "system", "content": "You make history questions"},
         {"role": "assistant", "content": "You are someone that creates question on a given topic"},
         {"role": "user", "content": "Can you create 10 questions on the American Revolutionary War with the answer to each question"},
     ],
-    temperature=0.2
+    temperature=0
 )
 
 print(response['choices'][0]['message']['content'])
+
