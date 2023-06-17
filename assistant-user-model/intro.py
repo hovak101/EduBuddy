@@ -6,7 +6,11 @@ import interface #tkinter file
 
 ## Example OpenAI Python library request
 MODEL = "gpt-4"
+<<<<<<< HEAD:intro.py
 _ = load_dotenv("EduBuddy/keys.env")
+=======
+_ = load_dotenv("assistant-user-model/keys.env")
+>>>>>>> refs/remotes/origin/main:assistant-user-model/intro.py
 openai.api_key = os.environ['OPENAI_API_KEY']
 response = openai.ChatCompletion.create(
     model=MODEL,
@@ -22,3 +26,4 @@ response = openai.ChatCompletion.create(
 )
 
 print(response['choices'][0]['message']['content'])
+
