@@ -3,14 +3,14 @@ import os
 
 # Example OpenAI Python library request
 MODEL = "gpt-4"
-openai.api_key = "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"
+openai.api_key = ""
 response = openai.ChatCompletion.create(
     model=MODEL,
+    prompt = "Explain the golden ratio?",
     messages=[
-        {"role": "user", "content": "What is the weather in San Jose, California?"},
-        
+        {"role": "user", "content": "Hello!"},
     ],
-    temperature=0.2,
+    temperature=0.2
 )
 
 print(response['choices'][0]['message']['content'])
