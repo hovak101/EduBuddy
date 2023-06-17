@@ -4,7 +4,7 @@ from dotenv import load_dotenv, find_dotenv
 
 # Example OpenAI Python library request
 MODEL = "gpt-4"
-_ = load_dotenv("keys.env")
+_ = load_dotenv("assistant-user-model/keys.env")
 openai.api_key = os.environ['OPENAI_API_KEY']
 response = openai.ChatCompletion.create(
     model=MODEL,
