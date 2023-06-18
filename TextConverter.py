@@ -3,7 +3,8 @@ import openai
 from dotenv import load_dotenv, find_dotenv
 from llama_index import VectorStoreIndex, SimpleDirectoryReader
 import pyperclip
-
+load_dotenv(find_dotenv())
+openai.api_key = os.environ['OPENAI_API_KEY']
 MODEL = "gpt-4"
 
 def waitAndReturnNewText():
@@ -38,6 +39,7 @@ def generateSummaryFromText(text, minimumWords, maximumWords):
         # input from user data, yo uask to summarize, it will put assistant as "you are a summarizer..."
 
         messages=[
+            {"role": "system", "content": "You are a summary writer."},
             {"role": "assistant", "content": "You are someone that summarizes information on a given topic."},
             {"role": "user", "content": "Summarize the following information in " + minimumWords + " to " + maximumWords + " words: " + text},
         ],
@@ -86,19 +88,3 @@ def getResponseLengthFromText(text):
     
     else:
         return 200; 
-
-# def understand(res):
-#   response = openai.ChatCompletion.create(
-#       model='gpt-4',
-
-#       #decide which system, assistant to use.
-
-#       messages=[
-#           {"role": "system", "content": "You make summary from a text input"},
-#           {"role": "assistant", "content": "Summary with bullet points"},
-#           {"role": "user", "content": f"{res}"},
-#       ],
-#       temperature=0
-#   )
-#   return response
-# print(generateResponseFromFile(r'content/CaseForReperations.docx', 'Generate a ten-question quiz from the input information'))

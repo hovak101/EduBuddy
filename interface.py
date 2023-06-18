@@ -3,6 +3,7 @@ from screeninfo import get_monitors
 from PIL import Image, ImageTk
 import os
 from tkinter import filedialog
+import TextConverter
 # import platform
 # import ctypes
 # import objc
@@ -46,6 +47,11 @@ class Window(tk.Tk):
         qs_button_height = 45
         qs_button1.place(x=0, y=0, width=self.w/2, height=qs_button_height)
         qs_button2.place(x=self.w/2, y=0, width=self.w/2, height=qs_button_height)
+
+        qs_button1.bind("<ButtonPress-1>", self.qs_button1_pres)
+
+        def qs_button1_pres(event):
+            generateSummaryFromText(text, )
 
         # Context title box
         context_title = tk.Label(self, text="<QQQQQQQQQQQQQQQQQ>", bg="lightblue")
@@ -122,6 +128,7 @@ class Window(tk.Tk):
         self.geometry(f"+{new_x}+{new_y}")
 
 window = Window()
+
 
 
 
