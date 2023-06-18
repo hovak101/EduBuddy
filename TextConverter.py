@@ -3,7 +3,7 @@ import openai
 from dotenv import load_dotenv, find_dotenv
 from llama_index import VectorStoreIndex, SimpleDirectoryReader
 import pyperclip
-load_dotenv(find_dotenv())
+load_dotenv('keys.env')
 openai.api_key = os.environ['OPENAI_API_KEY']
 MODEL = "gpt-4"
 

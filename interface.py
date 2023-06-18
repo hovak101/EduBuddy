@@ -133,7 +133,7 @@ class Window(tk.Tk):
 
         self.geometry(f"+{new_x}+{new_y}")
 
-    def qs_button1_pres(event):
+    def qs_button1_pres(self, event):
         minimumWords = 0
         maximumWords = tc.getResponseLengthFromText()
         # tc.generateSummaryFromText(text, minimumWords, maximumWords)

@@ -17,3 +17,7 @@ install('docx2txt')
 
 install('pygetwindow')
 install('pywinauto')
+
+install('pyperclip')
+install('pillow')
+install('screeninfo')

@@ -1,65 +1,38 @@
+from chat_or_use_tools import chat_or_use_tools
 import time
+import pyttsx3
 import os
 import openai
 from dotenv import load_dotenv, find_dotenv
-from langchain.chains import RetrievalQA
-from langchain.chat_models import ChatOpenAI
-from langchain.document_loaders import CSVLoader
-from langchain.vectorstores import DocArrayInMemorySearch
-# from IPython.display import display, Markdown
-from langchain.indexes import VectorstoreIndexCreator
-from langchain.document_loaders.excel import UnstructuredExcelLoader
-from llama_index import download_loader
-from llama_index.readers.schema.base import Document
-from apify_client import ApifyClient
-import wget
-from llama_index import download_loader
-from llama_index.readers.schema.base import Document
-from langchain.agents.agent_toolkits import create_python_agent
 from langchain.agents import load_tools, initialize_agent
-from langchain.agents import AgentType
-from langchain.tools.python.tool import PythonREPLTool
-from langchain.python import PythonREPL
-from langchain.chat_models import ChatOpenAI
-import json
-from langchain.chat_models import ChatOpenAI
-from langchain.experimental.plan_and_execute import PlanAndExecute, load_agent_executor, load_chat_planner
-from langchain.llms import OpenAI
-from langchain import SerpAPIWrapper
-from langchain.agents.tools import Tool
-from langchain import LLMMathChain
-import langchain
-import pandas as pd
 import numpy as np
 import pinecone
 from langchain.chains import ConversationChain
 from langchain.memory import ConversationBufferMemory
 from langchain.memory import ConversationBufferWindowMemory
-from langchain.chat_models import ChatOpenAI
-from langchain.experimental.plan_and_execute import PlanAndExecute, load_agent_executor, load_chat_planner
-from langchain.llms import OpenAI
-from langchain import SerpAPIWrapper
-from langchain.agents.tools import Tool
-from langchain import LLMMathChain
-import llama_index
+from langchain.experimental.plan_and_execute import  load_agent_executor, load_chat_planner
 import pyaudio
 import wave
 from pydub import AudioSegment
 from hume import HumeStreamClient
-from hume.models.config import LanguageConfig, ProsodyConfig
+from hume.models.config import  ProsodyConfig
+import ssl
 # import torch
 # import cv2
 import asyncio
 import whisper
-_ = load_dotenv("keys.env")
+load_dotenv("keys.env")
 openai.api_key = os.environ['OPENAI_API_KEY']
-import pydub
 CHUNK = 1024
 FORMAT = pyaudio.paInt16
 CHANNELS = 2
 RATE = 20000
 RECORD_SECONDS = 10
-WAVE_OUTPUT_FILENAME = "output.wav"
+WAVE_FILE = "output"
+MP3_FILE = "test"
+WHISPER_MODEL = "base"
+emo = []
+frames = []
 
 p = pyaudio.PyAudio()
 
@@ -71,8 +44,6 @@ stream = p.open(format=FORMAT,
 
 print("* recording")
 
-frames = []
-
 for i in range(0, int(RATE / CHUNK * RECORD_SECONDS)):
     data = stream.read(CHUNK)
     frames.append(data)
@@ -83,16 +54,15 @@ stream.stop_stream()
 stream.close()
 p.terminate()
 
-wf = wave.open(WAVE_OUTPUT_FILENAME, 'wb')
+wf = wave.open(WAVE_FILE + ".wav", 'wb')
 wf.setnchannels(CHANNELS)
 wf.setsampwidth(p.get_sample_size(FORMAT))
 wf.setframerate(RATE)
 wf.writeframes(b''.join(frames))
 wf.close()
-import wave
 
 # Open the WAV file
-with wave.open('output.wav', 'rb') as wf:
+with wave.open(WAVE_FILE + '.wav', 'rb') as wf:
     # Get the number of frames and the sample width
     num_frames = wf.getnframes()
     sample_width = wf.getsampwidth()
@@ -102,69 +72,110 @@ with wave.open('output.wav', 'rb') as wf:
     sr = wf.getframerate()
 # Convert the frames to a numpy array
 audio = np.frombuffer(frames, dtype=np.int16)
-start = time.time()
-def save_mp3(file, data, sample_rate):
+def save_mp3(file, data, sample_rate, batch_size = 100000):
     """Save a numpy array of audio data as an MP3 file."""
-    sound = AudioSegment(
-        data.tobytes(),
-        frame_rate=sample_rate,
-        sample_width=data.dtype.itemsize,
-        channels=1
-    )
-    sound.export(file, format="mp3")
+    for i in range(int(len(data)/batch_size) + 1):
+        d = data[int(i * batch_size) : min(int((i + 1) * batch_size), len(data))]
+        print(d)
+        sound = AudioSegment(
+            d.tobytes(),
+            frame_rate=sample_rate,
+            sample_width=data.dtype.itemsize,
+            channels=1
+        )
+        sound.export((file + str(i) + '.mp3'), format="mp3")
 
 # You can then use this function to save a numpy array of audio data as an MP3 file like this:
 audio = np.array(audio, dtype=np.int16)
 
 print(len(audio))
 # print(audio)
-save_mp3('test.mp3', audio[-30000:], sr)
+save_mp3(MP3_FILE, audio, sr)
 
-emo = []
 # "/content/drive/MyDrive/Hackathon/Recording.m4a"
-async def go():
+async def go(file):
     client = HumeStreamClient(os.environ['HUME_API_KEY'])
     config = ProsodyConfig()
+    
+    # i = 0
+    # path = os.path.join(os.getcwd(), file + str(i) + '.mp3')
+        
     async with client.connect([config]) as socket:
-        # for sample in samples:
-            result = await socket.send_file("test.mp3")#.send_text(sample)
-            emotions = result
-            # print(emotions)
-            emo.append(emotions)
-
-# Create an event loop
-loop = asyncio.get_event_loop()
-
-# Schedule the `go` coroutine to run
-loop.run_until_complete(go())
+        # while os.path.exists(path) and i < 1:
+        result = await socket.send_file(filepath= 'test1.mp3')#.send_text(sample)
+        emotions = result
+        emo.append(emotions)    
+        # i += 1
+        # time.sleep(15)
+        # os.remove(path)
+        # path = os.path.join(os.getcwd(), file + str(i) + '.mp3')
 try:
-    emo = emo[0]['prosody']['predictions'][0]['emotions']
+    # Create an event loop
+    loop = asyncio.get_event_loop()
+
+    # Schedule the `go` coroutine to run
+    loop.run_until_complete(go(MP3_FILE))
+    try:
+        emo = emo[0]['prosody']['predictions'][0]['emotions']
+    except:
+        print(emo)
+    if len(emo) == 0:
+        raise FileNotFoundError(f'No data found. Probably because {MP3_FILE}0.mp3 cannot be found in the directory')
+    # Close the event loop
+    loop.close()
+
+    model = whisper.load_model(WHISPER_MODEL)
+
+    # load audio and pad/trim it to fit 30 seconds
+    audio = whisper.load_audio(WAVE_FILE + ".wav")
+    audio = whisper.pad_or_trim(audio)
+
+    # make log-Mel spectrogram and move to the same device as the model
+    mel = whisper.log_mel_spectrogram(audio).to(model.device)
+    # detect the spoken language
+    _, probs = model.detect_language(mel)
+    print(f"Detected language: {max(probs, key=probs.get)}")
+
+    # decode the audio
+    options = whisper.DecodingOptions(fp16 = False)
+    result = whisper.decode(model, mel, options)
+    print(result.text)
+    
+    another_emo = []
+    talk = ''
+    if len(emo) > 1:
+        for e in emo:
+            if e['score'] > 0.5:
+                another_emo.append(e['name'])
+        speech = result.text + ', emotion dict: '+ str(another_emo)
+        res = chat_or_use_tools(speech)
+        if res != 'not speaking':
+            talk = res
+    else:
+        speech = result.text + ", emotion dict: ['None']"
+        res = chat_or_use_tools(speech)
+        if res != 'not speaking':
+            talk = res
 except:
-    print(emo)
-# Close the event loop
-loop.close()
-print(time.time() - start)
-print([key for key in emo if key['score'] > 0.5])
+    talk = "I am sorry but there is a socket problem. Please try again!"
+# Initialize the converter
+converter = pyttsx3.init()
+  
+# Set properties before adding
+# Things to say
+# talk = 'Good morning!'
+# Sets speed percent 
+# Can be more than 100
+converter.setProperty('rate', 200)
+# # Set volume 0-1
+converter.setProperty('volume', 0.5)
+converter.setProperty('voice', 'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices\Tokens\TTS_MS_EN-US_ZIRA_11.0')
+voices = converter.getProperty('voices')
 
-model = whisper.load_model("base")
-
-# load audio and pad/trim it to fit 30 seconds
-audio = whisper.load_audio("output.wav")
-audio = whisper.pad_or_trim(audio)
-
-# make log-Mel spectrogram and move to the same device as the model
-mel = whisper.log_mel_spectrogram(audio).to(model.device)
-# print(mel[20:60])
-# detect the spoken language
-_, probs = model.detect_language(mel)
-print(f"Detected language: {max(probs, key=probs.get)}")
-
-# decode the audio
-options = whisper.DecodingOptions(fp16 = False)
-result = whisper.decode(model, mel, options)
-print(result.text)
-# Load the model and tokenizer
-# model_engine = "text-davinci-002"
-# Decode the tokens
-# decoded_text = model.decode(np.array(result.tokens, dtype = np.float32))
-# print(decoded_text)
+# Queue the entered text 
+# There will be a pause between
+# each one like a pause in 
+# a sentence
+print(talk)
+converter.say(talk)
+converter.runAndWait()
