@@ -4,11 +4,18 @@ from PIL import Image, ImageTk
 import os
 from tkinter import filedialog
 import TextConverter as tc
+
 import platform
 import pyperclip
 import config
 from threading import Thread
+<<<<<<< HEAD
 from Speech_functions import checking, asking
+=======
+import textwrap
+import time
+
+>>>>>>> 16f45626dfa7d789f63e196db060bb6b154728eb
 config.init()
 # import ctypes
 # import objc
@@ -47,7 +54,7 @@ class Quiz():
 
                 self.questions[i]["alternatives"][j] = init_string
 
-        #self.questions is formatted like this: obj = {question: "<q>", alternatives: ["alt1", "alt2", "alt3", "alt4"], answer: <0-3>}
+        #self.questions is formatted like this: obj = [{question: "<q>", alternatives: ["alt1", "alt2", "alt3", "alt4"], answer: <0-3>}]
 
 
 
@@ -75,8 +82,8 @@ class Window(tk.Tk):
 
         # Set the window's initial position
         self.padding = 15
-        self.w = 200
-        self.h = 300
+        self.w = 400 #was 200
+        self.h = 500 #was 300
         self.x = self.screen_w - self.w - self.padding  # X coordinate
         self.y = self.screen_h - self.h - self.padding  # Y coordinate
 
@@ -95,7 +102,7 @@ class Window(tk.Tk):
         micButton.place(x = 0, y = self.h - micButtonHeight, width=45, height=micButtonHeight)
         micButton.bind("<ButtonPress-1>", lambda inp: asking())
         sq_button1.bind("<ButtonPress-1>", self.sq_button1_press)
-        sq_button2.bind("<ButtonPress-1>", self.sq_button1_press)
+        sq_button2.bind("<ButtonPress-1>", self.sq_button2_press)
 
         # Context title box
         self.context_title = tk.Label(self, text="Context", bg="lightblue")
@@ -105,7 +112,7 @@ class Window(tk.Tk):
         self.icon_size = 60
         script_dir = os.path.dirname(os.path.abspath(__file__))
         image_path = os.path.join(script_dir, "media", "buddy.png")
-        print(image_path)
+        # print(image_path)
         self.image = Image.open(image_path)
         self.image = self.image.resize((self.icon_size, self.icon_size))
         self.image = self.image.transpose(Image.FLIP_LEFT_RIGHT)
@@ -116,12 +123,14 @@ class Window(tk.Tk):
 
         # Text output
         self.output_box = tk.Text(self, borderwidth=0, highlightthickness=0)
-        self.output_box.insert(tk.END, "Initial text")
-        self.output_box.place(x=3, y=65, w=self.w - 6, h=125)
+        # self.output_box.insert(tk.END, "")
+        self.output_box.configure(state="disabled")
+        # self.output_box.place(x=3, y=self.h - 125 - 60, w=self.w - 6, h=325)
+        self.output_box.place(x=3, y=65, w=self.w - 6, h=310)
 
         # Text input field
         self.text_box = tk.Text(self, borderwidth=0, highlightthickness=0)
-        self.text_box.place(x=3, y=self.h - 50 - 65, w=self.w - 6, h=65)
+        self.text_box.place(x=3, y=self.h - 65 - 60, w=self.w - 6, h=65)
         self.text_box.bind("<Return>", self.submit_input)
 
         # Bind mouse events
@@ -132,6 +141,13 @@ class Window(tk.Tk):
         # get local file
         file_button = tk.Button(self, text="File", command=self.open_file_dialog)
         file_button.place(x=self.w/2 - 45/2, y=self.h - 48, w=45, h=45)
+
+        # Quiz variables
+        self.current_quiz_ans = -1
+        self.current_quiz_score = 0
+        self.current_quiz_questions = []
+        self.quiz_obj = None
+        self.quiz_alternative_buttons = [None, None, None, None]
 
     def open_file_dialog(event):
         file_path = filedialog.askopenfilename()
@@ -144,13 +160,13 @@ class Window(tk.Tk):
         self.y = event.y_root
         self.offset_x = self.winfo_x()
         self.offset_y = self.winfo_y()
+        
 
     def on_button_motion(self, event):
         # Calculate the new window position based on mouse movement
         new_x = self.offset_x + (event.x_root - self.x)
         new_y = self.offset_y + (event.y_root - self.y)
         self.geometry(f"+{new_x}+{new_y}")
-
 
     def on_button_release(self, event):
         is_left = (event.x_root - event.x + self.w/2 < self.screen_w/2)
@@ -176,13 +192,10 @@ class Window(tk.Tk):
             self.img_label.place(x=self.w - self.icon_size, y=self.h - self.icon_size)
 
         self.geometry(f"+{new_x}+{new_y}")
-
-
   
     def waitAndReturnNewText(self):
         while True:
             config.text = pyperclip.waitForNewPaste()
-
         
     def sq_button1_press(self, event):
         # generate title
@@ -193,7 +206,7 @@ class Window(tk.Tk):
         minimumWords = 0
         maximumWords = tc.getResponseLengthFromText(config.text)
         response = tc.generateSummaryFromText(config.text, minimumWords, maximumWords)
-        print(response)
+        # print(response)
         self.updateOutput(response)
 
     def sq_button2_press(self, event):
@@ -208,6 +221,7 @@ class Window(tk.Tk):
 
     def updateOutput(self, text_input):
         # self.output_box.config(text=text_input)
+        self.output_box.configure(state="normal")
         self.output_box.delete('1.0', tk.END)
         self.output_box.insert(tk.END, text_input)
 
@@ -216,6 +230,53 @@ class Window(tk.Tk):
         self.output_box.delete('1.0', tk.END)
         str1 = tc.sendGptRequest(self.text_input,config.text)
         self.updateOutput(str1)
+        #Run your function here. And then with the gpt output, run updateOutput function above this function
+
+    def quiz_iteration(self, quiz_obj):
+        if (len(quiz_obj.questions) == 0):
+            self.question.destroy()
+            for i in self.quiz_alternative_buttons:
+                i.destroy()
+            self.display_quiz_results()
+            return
+        # make quiz question and button element from Quiz obj
+        wrapped_text = textwrap.fill(quiz_obj.questions[0]["question"], width=self.w)
+        self.question = tk.Label(self, text=wrapped_text, bg="gray")
+        self.quiz_alternative_buttons = [
+            tk.Button(self, text="1." + quiz_obj.questions[0]["alternatives"][0]),
+            tk.Button(self, text="2." + quiz_obj.questions[0]["alternatives"][1]),
+            tk.Button(self, text="3." + quiz_obj.questions[0]["alternatives"][2]),
+            tk.Button(self, text="4." + quiz_obj.questions[0]["alternatives"][3])
+        ]
+        self.current_quiz_ans = quiz_obj.questions[0]["answer"]
+
+        # place on window
+        self.question.place(x=0, y=65, w=self.w, h=60)
+        for i in range(4):
+            self.quiz_alternative_buttons[i].place(x=0, y=(125 + 45*(i+1)), w=self.w, h=45)
+
+            self.quiz_alternative_buttons[i].bind("<ButtonPress-1>", self.quiz_button_click)
+
+        # add to list of questions for this quiz only
+        self.current_quiz_questions.append([wrapped_text, quiz_obj.questions[0]["alternatives"][self.current_quiz_ans]])
+
+        quiz_obj.questions.pop(0)
+        
+    def quiz_button_click(self, event):
+        answered = int(event.widget.cget("text")[0]) - 1
+        print(answered == self.current_quiz_ans)
+        if (answered == self.current_quiz_ans):
+            self.current_quiz_score += 1
+        print(self.current_quiz_ans)
+        self.quiz_alternative_buttons[answered].configure(bg="red")
+        self.quiz_alternative_buttons[self.current_quiz_ans].configure(bg="green")
+
+        self.quiz_iteration(self.quiz_obj)
+
+    def display_quiz_results(self):
+        self.updateOutput(f"Quiz results: {self.current_quiz_score}/{num_quiz_questions} - {self.current_quiz_questions}")
+
+
         
 window = Window()
 

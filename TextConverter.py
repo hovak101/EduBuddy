@@ -33,7 +33,7 @@ def getTitleFromText(text):
 
         messages=[
             {"role": "assistant", "content": "You are someone that generate titles given texts."},
-            {"role": "user", "content": "Given the following code, generate a title from 0 to 19 characters: " + text},
+            {"role": "user", "content": "Given the following text, generate a title from 1 to 19 characters: " + text},
         ],
         temperature=0
     )
@@ -77,8 +77,8 @@ def getMultipleChoiceQuiz(prompt, num):
         model=MODEL,
         messages=[
             {"role": "system", "content": "You are a very helpful quiz maker"},
-            {"role": "assistant", "content": "generate 5 questions with 4 alternatives (1 right, 3 wrong) about london formatted like this: first line: question, next four lines: alternatives. correct marked with '*' at the end of line. label alternatives 'a.'-'d.' and question '<num>.'"},
-            {"role": "user", "content": "Make a" + num + " question quiz about " + prompt},
+            {"role": "assistant", "content": f"generate {str(num)} questions with 4 alternatives (1 right, 3 wrong) about {str(prompt)} formatted like this: first line: question, next four lines: alternatives. correct marked with '*' at the end of line. label alternatives 'a.'-'d.' and question '<num>.'"},
+            {"role": "user", "content": "Make a" + str(num) + " question quiz about " + prompt},
         ],
         temperature=0.2  
     )
