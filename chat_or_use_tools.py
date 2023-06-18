@@ -2,10 +2,11 @@ import openai
 from langchain.agents import AgentType
 from langchain.llms import OpenAI
 import ssl
+import config
 from langchain.agents import tool
 from langchain.agents import load_tools, initialize_agent
-
-def chat_or_use_tools(text):
+# from langchain.memory import ConversationSummaryBufferMemory
+def chat_or_use_tools(text, memory = None):
     @tool
     def chat(text: str) -> str:
         '''
@@ -42,8 +43,11 @@ def chat_or_use_tools(text):
     llm = OpenAI(temperature=0)
     tools = load_tools(["wolfram-alpha", "serpapi"], llm=llm)
     agent = initialize_agent(tools + [chat, comment], llm, agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION, verbose=True)
-
-
+    # print(config.text)
+    # memory = ConversationSummaryBufferMemory(llm=llm, max_token_limit=2000)
+    # memory.save_context({"input": f"Remember this '{config.text}' for the next conversation"}, {"output": "Okay"})
+    # print(memory.load_memory_variables({}))
+    # return agent.run(f"The context: {memory.load_memory_variables({})} Here is the user input: {text}")
     return agent.run(text)
 
 
@@ -86,6 +90,5 @@ def detech_emotion(text):
     ssl._create_default_https_context = ssl._create_unverified_context
     llm = OpenAI(temperature=0)
     agent = initialize_agent([chat, check], llm, agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION, verbose=True)
-
 
     return agent.run(text)
