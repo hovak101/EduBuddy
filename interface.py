@@ -50,9 +50,6 @@ class Window(tk.Tk):
 
         qs_button1.bind("<ButtonPress-1>", self.qs_button1_pres)
 
-        def qs_button1_pres(event):
-            tc.generateSummaryFromText(text, )
-
         # Context title box
         context_title = tk.Label(self, text="<QQQQQQQQQQQQQQQQQ>", bg="lightblue")
         context_title.place(x=3, y=45, w=self.w - 6)
@@ -126,6 +123,10 @@ class Window(tk.Tk):
             self.img_label.place(x=self.w - self.icon_size, y=self.h - self.icon_size)
 
         self.geometry(f"+{new_x}+{new_y}")
-
+        
+    def qs_button1_pres(event):
+            minimumWords = 0
+            maximumWords = tc.getResponseLengthFromText()
+            tc.generateSummaryFromText(text, minimumWords, maximumWords)
 window = Window()
 window.mainloop()
