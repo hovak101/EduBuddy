@@ -10,6 +10,48 @@ def chat_or_use_tools(text):
     def chat(text: str) -> str:
         '''
         USE THIS FUNCTION ONE TIME ONLY
+        Good for talking and chating, make sure you do not talk to yourself (especially do not called twice in a row)
+        '''
+        completion = openai.ChatCompletion.create(
+        model="gpt-4",
+        messages=[
+                {"role": "system", "content": "Good for talking and chating, make sure you do not talk to yourself (especially do not called twice in a row)"},
+                {"role": "assistant", "content": "You are talking to a friend"},
+                {"role": "user", "content": text}
+            ]
+        )
+        return completion.choices[0].message['content']
+    @tool
+    def comment(text: str) -> str:
+        '''
+        This function will always be called after serp api being called and be called at most 5 times (if the serp api is called and the model must call this function, then end the chain and return the result). Analyze the return from serp api and determine whether that result is good enough.
+        Its definition for good enough is that when user receive it, they will not open their phone and do more research on them.
+        If the result is not good enough, then prompt for serp api again for a more detailed result. Else end and give out the detailed result
+        '''
+        completion = openai.ChatCompletion.create(
+        model="gpt-4",
+        messages=[
+                {"role": "system", "content": "You are a judge for serp api result, so you will always be called after serp api tool ran, but you will be called at most 5 times (if the serp api is called and the model must call this function, then end the chain and return the result). You will check if the result is good enough that user will not need to google it again. If it is good enough then end the chain and return the result, else prompt the serp api again for more detailed results"},
+                {"role": "assistant", "content": "Receive in serp api search result and decide if it is good enough"},
+                {"role": "user", "content": text}
+            ]
+        )
+        return completion.choices[0].message['content']
+
+    ssl._create_default_https_context = ssl._create_unverified_context
+    llm = OpenAI(temperature=0)
+    tools = load_tools(["wolfram-alpha", "serpapi"], llm=llm)
+    agent = initialize_agent(tools + [chat, comment], llm, agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION, verbose=True)
+
+
+    return agent.run(text)
+
+
+def detech_emotion(text):
+    @tool
+    def chat(text: str) -> str:
+        '''
+        USE THIS FUNCTION ONE TIME ONLY
         You check if the speech receive is similar to 'not speaking' or not.
         If you are absolutely sure that the user is not speaking, return 'not speaking', else give a response back, use after check and use one only.
         Good for doing conversation.
@@ -40,27 +82,10 @@ def chat_or_use_tools(text):
             ]
         )
         return completion.choices[0].message['content']
-    @tool
-    def comment(text: str) -> str:
-        '''
-        This function will always be called after serp api being called and be called at most 5 times (if the serp api is called and the model must call this function, then end the chain and return the result). Analyze the return from serp api and determine whether that result is good enough.
-        Its definition for good enough is that when user receive it, they will not open their phone and do more research on them.
-        If the result is not good enough, then prompt for serp api again for a more detailed result. Else end and give out the detailed result
-        '''
-        completion = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=[
-                {"role": "system", "content": "You are a judge for serp api result, so you will always be called after serp api tool ran, but you will be called at most 5 times (if the serp api is called and the model must call this function, then end the chain and return the result). You will check if the result is good enough that user will not need to google it again. If it is good enough then end the chain and return the result, else prompt the serp api again for more detailed results"},
-                {"role": "assistant", "content": "Receive in serp api search result and decide if it is good enough"},
-                {"role": "user", "content": text}
-            ]
-        )
-        return completion.choices[0].message['content']
 
     ssl._create_default_https_context = ssl._create_unverified_context
     llm = OpenAI(temperature=0)
-    tools = load_tools(["wolfram-alpha", "serpapi"], llm=llm)
-    agent = initialize_agent(tools + [chat, check, comment], llm, agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION, verbose=True)
+    agent = initialize_agent([chat, check], llm, agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION, verbose=True)
 
 
     return agent.run(text)
