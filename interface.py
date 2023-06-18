@@ -4,6 +4,7 @@ from PIL import Image, ImageTk
 import os
 from tkinter import filedialog
 import TextConverter as tc
+
 import platform
 import pyperclip
 import config
@@ -151,6 +152,7 @@ class Window(tk.Tk):
         self.y = event.y_root
         self.offset_x = self.winfo_x()
         self.offset_y = self.winfo_y()
+        
 
     def on_button_motion(self, event):
         # Calculate the new window position based on mouse movement
@@ -198,7 +200,6 @@ class Window(tk.Tk):
         response = tc.generateSummaryFromText(config.text, minimumWords, maximumWords)
         # print(response)
         self.updateOutput(response)
-        self.text_input = ''
 
     def sq_button2_press(self, event):
         # generate title
@@ -206,23 +207,15 @@ class Window(tk.Tk):
         self.context_title.config(text=text1)
 
         # generate quiz
-        # response = tc.generateQuizFromText(config.text, 5)
-        # print(response)
-        # self.updateOutput(response)
-        # self.text_input = ''
-        self.current_quiz_score = 0
-        response = tc.getMultipleChoiceQuiz(config.text, num_quiz_questions)
-
-        self.quiz_obj = Quiz(response)
-        self.quiz_iteration(self.quiz_obj)
-        
+        response = tc.generateQuizFromText(config.text, 5)
+        print(response)
+        self.updateOutput(response)
 
     def updateOutput(self, text_input):
         # self.output_box.config(text=text_input)
         self.output_box.configure(state="normal")
         self.output_box.delete('1.0', tk.END)
         self.output_box.insert(tk.END, text_input)
-        self.output_box.configure(state="disabled") # Check if this works
 
     def submit_input(self, event):
         self.text_input = self.text_box.get("1.0", "end-1c")
@@ -276,6 +269,7 @@ class Window(tk.Tk):
         self.updateOutput(f"Quiz results: {self.current_quiz_score}/{num_quiz_questions} - {self.current_quiz_questions}")
 
 
+        
         
 window = Window()
 
