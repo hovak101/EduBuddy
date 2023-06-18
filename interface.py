@@ -132,7 +132,8 @@ class Window(tk.Tk):
         file_button.place(x=self.w/2 - 45/2, y=self.h - 48, w=45, h=45)
 
         # quiz buttons
-        sq_button1 = tk.Button(self)
+        # self.uiz_alt_1 = tk.Button(self)
+
 
     def open_file_dialog(event):
         file_path = filedialog.askopenfilename()
