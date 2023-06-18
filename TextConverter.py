@@ -112,7 +112,16 @@ def translateAudio(audioFile):
     transcript = openai.Audio.translate("whisper-1", audio_file)
     return transcript.text
 
-
-
+def sendGptRequest(prompt, context):
+    response = openai.ChatCompletion.create(
+        model=MODEL,
+        messages=[
+            {"role": "system", "content": "You are a an assistant that helps user requests based on a given context"},
+            {"role": "assistant", "content": "You are given the following context:" + context},
+            {"role": "user", "content": prompt},
+        ],
+        temperature=0.2  
+    )
+    return(response['choices'][0]['message']['content'])
 
 
