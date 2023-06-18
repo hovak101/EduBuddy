@@ -3,19 +3,16 @@ import openai
 from dotenv import load_dotenv, find_dotenv
 from llama_index import VectorStoreIndex, SimpleDirectoryReader
 import pyperclip
+import config
 load_dotenv(find_dotenv())
 openai.api_key = os.environ['OPENAI_API_KEY']
 MODEL = "gpt-4"
-
-def waitAndReturnNewText():
-    clipboard = pyperclip.waitForNewPaste()
-    return clipboard
 
 def getTitleFromText(text):
     response = openai.ChatCompletion.create(
         model=MODEL,
 
-        #decide which system, assistant to use.
+        # decide which system, assistant to use.
         # input from user data, yo uask to summarize, it will put assistant as "you are a summarizer..."
 
         messages=[
@@ -31,13 +28,13 @@ def generateSummaryFromText(text, minimumWords, maximumWords):
     response = openai.ChatCompletion.create(
         model=MODEL,
 
-        #decide which system, assistant to use.
+        # decide which system, assistant to use.
         # input from user data, yo uask to summarize, it will put assistant as "you are a summarizer..."
 
         messages=[
             {"role": "system", "content": "You are a summary writer."},
             {"role": "assistant", "content": "You are someone that summarizes information on a given topic."},
-            {"role": "user", "content": "Summarize the following information in " + minimumWords + " to " + maximumWords + " words: " + text},
+            {"role": "user", "content": "Summarize the following information in " + str(minimumWords) + " to " + str(maximumWords) + " words: " + text},
         ],
         temperature=0
     )
@@ -52,7 +49,7 @@ def generateQuizFromText(text, numOfQuestions):
 
         messages=[
             {"role": "assistant", "content": "You are someone that creates question on a given topic"},
-            {"role": "user", "content": "Create " + numOfQuestions + " questions based off of the following text: " + text},
+            {"role": "user", "content": "Create " + str(numOfQuestions) + " questions based off of the following text: " + text},
         ],
         temperature=0
     )
@@ -64,7 +61,7 @@ def getMultipleChoiceQuiz(prompt, num):
         model=MODEL,
         messages=[
             {"role": "system", "content": "You are a very helpful quiz maker"},
-            {"role": "assistant", "content": "You make a 4-choice multiple choice quiz with the correct answers marked"},
+            {"role": "assistant", "content": "generate 5 questions with 4 alternatives (1 right, 3 wrong) about london formatted like this: first line: question, next four lines: alternatives. correct marked with '*' at the end of line. label alternatives 'a.'-'d.' and question '<num>.'"},
             {"role": "user", "content": "Make a" + num + " question quiz about " + prompt},
         ],
         temperature=0.2

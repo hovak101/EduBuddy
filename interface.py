@@ -5,6 +5,11 @@ import os
 from tkinter import filedialog
 import TextConverter as tc
 import platform
+import pyperclip
+import config
+from threading import Thread
+
+config.init()
 # import ctypes
 # import objc
 
@@ -17,6 +22,38 @@ Changes to make:
 - minimize on click buddy (maybe right click for settings)
 
 """
+
+
+num_quiz_questions = 5
+
+class Quiz():
+    def __init__(self, quiz_input_string):
+        self.questions = [None for _ in range(num_quiz_questions)]
+        lines = quiz_input_string.split("\n")
+        for i in range(num_quiz_questions):
+            self.questions[i] = {
+                "question": lines[i * 6][3:],
+                "alternatives": ["","","",""],
+                "answer": -1
+            }
+            for j in range(4):
+                init_string = lines[i * 6 + j + 1][3:]
+                asterisk_index = init_string.find('*')
+                
+                # Create the substring based on the asterisk index
+                if asterisk_index != -1:
+                    init_string = init_string[:asterisk_index]
+                    self.questions[i]["answer"] = j
+
+                self.questions[i]["alternatives"][j] = init_string
+
+        #self.questions is formatted like this: obj = {question: "<q>", alternatives: ["alt1", "alt2", "alt3", "alt4"], answer: <0-3>}
+
+
+
+# quiz1 = Quiz(tc.getMultipleChoiceQuiz("""Giraffes are majestic creatures known for their towering height, distinctive features, and gentle nature. With long necks, patterned coats, and graceful movements, they symbolize the beauty of the African savanna. These tallest land animals browse treetops, feed on foliage with their prehensile tongues, and exhibit intriguing social structures. Despite their imposing size, giraffes possess a calm demeanor but can defend themselves if threatened. Conservation efforts are crucial to protect giraffes from habitat loss and poaching, ensuring their survival and the preservation of Earth's biodiversity.""", f"{num_quiz_questions}"))
+
+
 
 class Window(tk.Tk):
     def __init__(self):
@@ -47,17 +84,18 @@ class Window(tk.Tk):
         self.geometry(f"{self.w}x{self.h}")
 
         #quiz/submit button
-        qs_button1 = tk.Button(self, text="S")
-        qs_button2 = tk.Button(self, text="Q")
-        qs_button_height = 45
-        qs_button1.place(x=0, y=0, width=self.w/2, height=qs_button_height)
-        qs_button2.place(x=self.w/2, y=0, width=self.w/2, height=qs_button_height)
+        sq_button1 = tk.Button(self, text="S")
+        sq_button2 = tk.Button(self, text="Q")
+        sq_button_height = 45
+        sq_button1.place(x=0, y=0, width=self.w/2, height=sq_button_height)
+        sq_button2.place(x=self.w/2, y=0, width=self.w/2, height=sq_button_height)
 
-        qs_button1.bind("<ButtonPress-1>", self.qs_button1_pres)
+        sq_button1.bind("<ButtonPress-1>", self.sq_button1_press)
+        sq_button2.bind("<ButtonPress-1>", self.sq_button1_press)
 
         # Context title box
-        context_title = tk.Label(self, text="<QQQQQQQQQQQQQQQQQ>", bg="lightblue")
-        context_title.place(x=3, y=45, w=self.w - 6, h=20)
+        self.context_title = tk.Label(self, text="Context", bg="lightblue")
+        self.context_title.place(x=3, y=45, w=self.w - 6, h=20)
 
         # add icon
         self.icon_size = 60
@@ -73,8 +111,9 @@ class Window(tk.Tk):
         self.img_label.place(x=self.w-self.icon_size, y=self.h-self.icon_size)
 
         # Text output
-        output_box = tk.Text(self, borderwidth=0, highlightthickness=0)
-        output_box.place(x=3, y=65, w=self.w - 6, h=125)
+        self.output_box = tk.Text(self, borderwidth=0, highlightthickness=0)
+        self.output_box.insert(tk.END, "Initial text")
+        self.output_box.place(x=3, y=65, w=self.w - 6, h=125)
 
         # Text input field
         text_box = tk.Text(self, borderwidth=0, highlightthickness=0)
@@ -133,12 +172,42 @@ class Window(tk.Tk):
 
         self.geometry(f"+{new_x}+{new_y}")
 
-    def qs_button1_pres(event):
-        minimumWords = 0
-        maximumWords = tc.getResponseLengthFromText()
-        # tc.generateSummaryFromText(text, minimumWords, maximumWords)
-        text = "Lorem ipsum"
+    def waitAndReturnNewText(self):
+        while True:
+            config.text = pyperclip.waitForNewPaste()
         
+        
+    def sq_button1_press(self, event):
+        # generate title
+        text1 = tc.getTitleFromText(config.text)
+        self.context_title.config(text=text1)
 
+        # generate summary
+        minimumWords = 0
+        maximumWords = tc.getResponseLengthFromText(config.text)
+        response = tc.generateSummaryFromText(config.text, minimumWords, maximumWords)
+        print(response)
+        self.updateOutput(response)
+
+    def sq_button2_press(self, event):
+        # generate title
+        text1 = tc.getTitleFromText(config.text)
+        self.context_title.config(text=text1)
+
+        # generate quiz
+        response = tc.generateQuizFromText(config.text, 5)
+        print(response)
+        self.updateOutput(response)
+
+    def updateOutput(self, text_input):
+        # self.output_box.config(text=text_input)
+        self.output_box.delete('1.0', tk.END)
+        self.output_box.insert(tk.END, text_input)
+        
 window = Window()
+
+thread = Thread(target=window.waitAndReturnNewText)
+thread.start()
+
 window.mainloop()
+thread.join()
