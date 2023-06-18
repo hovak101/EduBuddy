@@ -65,6 +65,21 @@ def generateQuizFromText(text, numOfQuestions):
 
     return response['choices'][0]['message']['content']
 
+def getMultipleChoiceQuiz(prompt):
+    
+    response = openai.ChatCompletion.create(
+        model=MODEL,
+        messages=[
+            {"role": "system", "content": "You are a very helpful quiz maker"},
+            {"role": "assistant", "content": "You make a 4-choice multiple choice quiz with the correct answers marked"},
+            {"role": "user", "content": "Make a 1 question quiz about " + prompt},
+        ],
+        temperature=0.2
+    )
+    return(response['choices'][0]['message']['content'])
+    
+
+
 def generateResponseFromFile(file, query):
     _ = load_dotenv(r'assistant-user-model\keys.env')
     openai.api_key = os.environ['OPENAI_API_KEY']
