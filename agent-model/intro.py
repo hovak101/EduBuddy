@@ -15,9 +15,9 @@ tools = load_tools(["wolfram-alpha", "serpapi"], llm=llm)
 agent = initialize_agent(tools, llm, agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION, verbose=True)
 
 
-def retMulChoice():
-    list = [(agent.run("Give me a multiple choice question about sea life with the correct answer identified"))]
-    return(list)
+def retMulChoice(text):
+    val = (agent.run(text))
+    return(val)
     
 
 
