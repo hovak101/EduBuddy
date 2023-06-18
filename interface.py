@@ -116,8 +116,9 @@ class Window(tk.Tk):
         self.output_box.place(x=3, y=65, w=self.w - 6, h=125)
 
         # Text input field
-        text_box = tk.Text(self, borderwidth=0, highlightthickness=0)
-        text_box.place(x=3, y=self.h - 50 - 65, w=self.w - 6, h=65)
+        self.text_box = tk.Text(self, borderwidth=0, highlightthickness=0)
+        self.text_box.place(x=3, y=self.h - 50 - 65, w=self.w - 6, h=65)
+        self.text_box.bind("<Return>", self.submit_input)
 
         # Bind mouse events
         self.bind("<ButtonPress-1>", self.on_button_press)
@@ -203,6 +204,12 @@ class Window(tk.Tk):
         # self.output_box.config(text=text_input)
         self.output_box.delete('1.0', tk.END)
         self.output_box.insert(tk.END, text_input)
+
+    def submit_input(self, event):
+        self.text_input = self.text_box.get("1.0", "end-1c")
+        self.output_box.delete('1.0', tk.END)
+
+        #Run your function here. And then with the gpt output, run updateOutput function above this function
         
 window = Window()
 
