@@ -123,10 +123,11 @@ class Window(tk.Tk):
             self.img_label.place(x=self.w - self.icon_size, y=self.h - self.icon_size)
 
         self.geometry(f"+{new_x}+{new_y}")
-        
+
     def qs_button1_pres(event):
-            minimumWords = 0
-            maximumWords = tc.getResponseLengthFromText()
-            tc.generateSummaryFromText(text, minimumWords, maximumWords)
+        minimumWords = 0
+        maximumWords = tc.getResponseLengthFromText()
+        tc.generateSummaryFromText(text, minimumWords, maximumWords)
+
 window = Window()
 window.mainloop()
