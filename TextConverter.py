@@ -32,7 +32,7 @@ def getTitleFromText(text):
 
         messages=[
             {"role": "assistant", "content": "You are someone that generate titles given texts."},
-            {"role": "user", "content": "Given the following code, generate a title from 0 to 19 characters: " + text},
+            {"role": "user", "content": "Given the following text, generate a title from 1 to 19 characters: " + text},
         ],
         temperature=0
     )
