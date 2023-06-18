@@ -11,6 +11,17 @@ def waitAndReturnNewText():
     clipboard = pyperclip.waitForNewPaste()
     return clipboard
 
+def translateText(text):
+    response = openai.ChatCompletion.create(
+        model=MODEL,
+        messages=[
+            {"role": "assistant", "content": "You are a translator."},
+            {"role": "user", "content": "Translate the following text into English and recognize the language: " + text},
+        ],
+        temperature=0
+    )
+    return response['choices'][0]['message']['content']
+
 def getTitleFromText(text):
     response = openai.ChatCompletion.create(
         model=MODEL,
@@ -67,7 +78,7 @@ def getMultipleChoiceQuiz(prompt, num):
             {"role": "assistant", "content": "You make a 4-choice multiple choice quiz with the correct answers marked"},
             {"role": "user", "content": "Make a" + num + " question quiz about " + prompt},
         ],
-        temperature=0.2
+        temperature=0.2  
     )
     return(response['choices'][0]['message']['content'])
     
@@ -94,3 +105,13 @@ def getResponseLengthFromText(text):
     
     else:
         return 200; 
+
+def translateAudio(audioFile):
+    audio_file = open(audioFile, "rb")
+    transcript = openai.Audio.translate("whisper-1", audio_file)
+    return transcript.text
+
+
+
+
+
