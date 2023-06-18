@@ -4,6 +4,7 @@ from PIL import Image, ImageTk
 import os
 from tkinter import filedialog
 import TextConverter as tc
+
 import platform
 import pyperclip
 import config
@@ -140,6 +141,7 @@ class Window(tk.Tk):
         self.y = event.y_root
         self.offset_x = self.winfo_x()
         self.offset_y = self.winfo_y()
+        
 
     def on_button_motion(self, event):
         # Calculate the new window position based on mouse movement
@@ -191,6 +193,7 @@ class Window(tk.Tk):
         response = tc.generateSummaryFromText(config.text, minimumWords, maximumWords)
         print(response)
         self.updateOutput(response)
+        
 
     def sq_button2_press(self, event):
         # generate title
@@ -201,17 +204,24 @@ class Window(tk.Tk):
         response = tc.generateQuizFromText(config.text, 5)
         print(response)
         self.updateOutput(response)
+        self.text_box = " "
+
+        
+    
+    
 
     def updateOutput(self, text_input):
         # self.output_box.config(text=text_input)
         self.output_box.delete('1.0', tk.END)
         self.output_box.insert(tk.END, text_input)
+        
 
     def submit_input(self, event):
         self.text_input = self.text_box.get("1.0", "end-1c")
         self.output_box.delete('1.0', tk.END)
         str1 = tc.sendGptRequest(self.text_input,config.text)
         self.updateOutput(str1)
+        
         
         
 window = Window()
