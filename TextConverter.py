@@ -8,6 +8,21 @@ load_dotenv(find_dotenv())
 openai.api_key = os.environ['OPENAI_API_KEY']
 MODEL = "gpt-4"
 
+def waitAndReturnNewText():
+    clipboard = pyperclip.waitForNewPaste()
+    return clipboard
+
+def translateText(text):
+    response = openai.ChatCompletion.create(
+        model=MODEL,
+        messages=[
+            {"role": "assistant", "content": "You are a translator."},
+            {"role": "user", "content": "Translate the following text into English and recognize the language: " + text},
+        ],
+        temperature=0
+    )
+    return response['choices'][0]['message']['content']
+
 def getTitleFromText(text):
     response = openai.ChatCompletion.create(
         model=MODEL,
@@ -64,7 +79,7 @@ def getMultipleChoiceQuiz(prompt, num):
             {"role": "assistant", "content": "generate 5 questions with 4 alternatives (1 right, 3 wrong) about london formatted like this: first line: question, next four lines: alternatives. correct marked with '*' at the end of line. label alternatives 'a.'-'d.' and question '<num>.'"},
             {"role": "user", "content": "Make a" + num + " question quiz about " + prompt},
         ],
-        temperature=0.2
+        temperature=0.2  
     )
     return(response['choices'][0]['message']['content'])
     
@@ -91,3 +106,13 @@ def getResponseLengthFromText(text):
     
     else:
         return 200; 
+
+def translateAudio(audioFile):
+    audio_file = open(audioFile, "rb")
+    transcript = openai.Audio.translate("whisper-1", audio_file)
+    return transcript.text
+
+
+
+
+
