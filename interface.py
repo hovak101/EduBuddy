@@ -3,7 +3,7 @@ from screeninfo import get_monitors
 from PIL import Image, ImageTk
 import os
 from tkinter import filedialog
-import TextConverter
+import TextConverter as tc
 # import platform
 # import ctypes
 # import objc
@@ -51,7 +51,7 @@ class Window(tk.Tk):
         qs_button1.bind("<ButtonPress-1>", self.qs_button1_pres)
 
         def qs_button1_pres(event):
-            generateSummaryFromText(text, )
+            tc.generateSummaryFromText(text, )
 
         # Context title box
         context_title = tk.Label(self, text="<QQQQQQQQQQQQQQQQQ>", bg="lightblue")
