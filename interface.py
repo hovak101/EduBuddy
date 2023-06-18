@@ -9,13 +9,10 @@ import platform
 import pyperclip
 import config
 from threading import Thread
-<<<<<<< HEAD
 from Speech_functions import checking, asking
-=======
 import textwrap
 import time
 
->>>>>>> 16f45626dfa7d789f63e196db060bb6b154728eb
 config.init()
 # import ctypes
 # import objc
