@@ -128,9 +128,4 @@ class Window(tk.Tk):
         self.geometry(f"+{new_x}+{new_y}")
 
 window = Window()
-
-
-
-
-
 window.mainloop()
