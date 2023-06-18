@@ -210,8 +210,9 @@ class Window(tk.Tk):
     def submit_input(self, event):
         self.text_input = self.text_box.get("1.0", "end-1c")
         self.output_box.delete('1.0', tk.END)
-
-        #Run your function here. And then with the gpt output, run updateOutput function above this function
+        str1 = tc.sendGptRequest(self.text_input,config.text)
+        self.updateOutput(str1)
+        
         
 window = Window()
 
