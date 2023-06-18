@@ -4,7 +4,7 @@ from PIL import Image, ImageTk
 import os
 from tkinter import filedialog
 import TextConverter as tc
-# import platform
+import platform
 # import ctypes
 # import objc
 
@@ -22,6 +22,11 @@ class Window(tk.Tk):
     def __init__(self):
         super().__init__()
 
+        # Check windows
+        self.addedDistance = 0
+        if (platform.system()) == "Windows":
+            self.addedDistance = 80
+
         self.title("EduBuddy")
         self.overrideredirect(True) # Remove window decorations (title, borders, exit & minimize buttons)
         self.attributes("-topmost", True)
@@ -38,7 +43,7 @@ class Window(tk.Tk):
         self.x = self.screen_w - self.w - self.padding  # X coordinate
         self.y = self.screen_h - self.h - self.padding  # Y coordinate
 
-        self.geometry(f"+{self.x}+{self.y}")
+        self.geometry(f"+{self.x}+{self.y-self.addedDistance}")
         self.geometry(f"{self.w}x{self.h}")
 
         #quiz/submit button
@@ -52,7 +57,7 @@ class Window(tk.Tk):
 
         # Context title box
         context_title = tk.Label(self, text="<QQQQQQQQQQQQQQQQQ>", bg="lightblue")
-        context_title.place(x=3, y=45, w=self.w - 6)
+        context_title.place(x=3, y=45, w=self.w - 6, h=20)
 
         # add icon
         self.icon_size = 60
@@ -66,6 +71,10 @@ class Window(tk.Tk):
         self.image_tk = ImageTk.PhotoImage(self.image)
         self.img_label = tk.Label(self, image=self.image_tk)
         self.img_label.place(x=self.w-self.icon_size, y=self.h-self.icon_size)
+
+        # Text output
+        output_box = tk.Text(self, borderwidth=0, highlightthickness=0)
+        output_box.place(x=3, y=65, w=self.w - 6, h=125)
 
         # Text input field
         text_box = tk.Text(self, borderwidth=0, highlightthickness=0)
@@ -104,7 +113,7 @@ class Window(tk.Tk):
         is_up = (event.y_root - event.y + self.h/2 < self.screen_h/2)
 
         new_x = self.padding if (is_left) else self.screen_w - self.w - self.padding
-        new_y = self.padding if (is_up) else self.screen_h - self.h - self.padding
+        new_y = self.padding + self.addedDistance if (is_up) else self.screen_h - self.h - self.padding - self.addedDistance
 
         # Move back to each side (vertical and horizontal) and maybe swap
         if (is_left):
@@ -127,7 +136,9 @@ class Window(tk.Tk):
     def qs_button1_pres(event):
         minimumWords = 0
         maximumWords = tc.getResponseLengthFromText()
-        tc.generateSummaryFromText(text, minimumWords, maximumWords)
+        # tc.generateSummaryFromText(text, minimumWords, maximumWords)
+        text = "Lorem ipsum"
+        
 
 window = Window()
 window.mainloop()

@@ -12,8 +12,6 @@ def waitAndReturnNewText():
     return clipboard
 
 def getTitleFromText(text):
-    _ = load_dotenv(r'assistant-user-model\keys.env')
-    openai.api_key = os.environ['OPENAI_API_KEY']
     response = openai.ChatCompletion.create(
         model=MODEL,
 
@@ -30,8 +28,6 @@ def getTitleFromText(text):
     return response['choices'][0]['message']['content']
     
 def generateSummaryFromText(text, minimumWords, maximumWords):
-    _ = load_dotenv(r'assistant-user-model\keys.env')
-    openai.api_key = os.environ['OPENAI_API_KEY']
     response = openai.ChatCompletion.create(
         model=MODEL,
 
@@ -49,8 +45,6 @@ def generateSummaryFromText(text, minimumWords, maximumWords):
     return response['choices'][0]['message']['content']
 
 def generateQuizFromText(text, numOfQuestions):
-    _ = load_dotenv(r'assistant-user-model\keys.env')
-    openai.api_key = os.environ['OPENAI_API_KEY']
     response = openai.ChatCompletion.create(
         model=MODEL,
 
@@ -65,14 +59,13 @@ def generateQuizFromText(text, numOfQuestions):
 
     return response['choices'][0]['message']['content']
 
-def getMultipleChoiceQuiz(prompt):
-    
+def getMultipleChoiceQuiz(prompt, num):
     response = openai.ChatCompletion.create(
         model=MODEL,
         messages=[
             {"role": "system", "content": "You are a very helpful quiz maker"},
             {"role": "assistant", "content": "You make a 4-choice multiple choice quiz with the correct answers marked"},
-            {"role": "user", "content": "Make a 1 question quiz about " + prompt},
+            {"role": "user", "content": "Make a" + num + " question quiz about " + prompt},
         ],
         temperature=0.2
     )
@@ -81,8 +74,6 @@ def getMultipleChoiceQuiz(prompt):
 
 
 def generateResponseFromFile(file, query):
-    _ = load_dotenv(r'assistant-user-model\keys.env')
-    openai.api_key = os.environ['OPENAI_API_KEY']
     # Load data from a file
     documents = SimpleDirectoryReader(input_files=[file]).load_data()
     # Create an index from the loaded documents
