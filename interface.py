@@ -131,6 +131,9 @@ class Window(tk.Tk):
         file_button = tk.Button(self, text="File", command=self.open_file_dialog)
         file_button.place(x=self.w/2 - 45/2, y=self.h - 48, w=45, h=45)
 
+        # quiz buttons
+        sq_button1 = tk.Button(self)
+
     def open_file_dialog(event):
         file_path = filedialog.askopenfilename()
         # Do something with the selected file path, such as printing it
@@ -216,7 +219,7 @@ class Window(tk.Tk):
         #Run your function here. And then with the gpt output, run updateOutput function above this function
 
     def start_quiz(quiz_obj):
-        
+
         
 window = Window()
 
