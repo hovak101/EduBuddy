@@ -179,10 +179,12 @@ class Window(tk.Tk):
 
         self.geometry(f"+{new_x}+{new_y}")
 
+
+  
     def waitAndReturnNewText(self):
         while True:
             config.text = pyperclip.waitForNewPaste()
-        
+
         
     def sq_button1_press(self, event):
         # generate title
@@ -216,11 +218,13 @@ class Window(tk.Tk):
     def submit_input(self, event):
         self.text_input = self.text_box.get("1.0", "end-1c")
         self.output_box.delete('1.0', tk.END)
-
+        str1 = tc.sendGptRequest(self.text_input,config.text)
+        self.updateOutput(str1)
         #Run your function here. And then with the gpt output, run updateOutput function above this function
 
     def start_quiz(quiz_obj):
-
+        pass
+        
         
 window = Window()
 
