@@ -9,9 +9,13 @@ import platform
 import pyperclip
 import config
 from threading import Thread
+<<<<<<< HEAD
+from Speech_functions import checking, asking
+=======
 import textwrap
 import time
 
+>>>>>>> 16f45626dfa7d789f63e196db060bb6b154728eb
 config.init()
 # import ctypes
 # import objc
@@ -93,6 +97,10 @@ class Window(tk.Tk):
         sq_button1.place(x=0, y=0, width=self.w/2, height=sq_button_height)
         sq_button2.place(x=self.w/2, y=0, width=self.w/2, height=sq_button_height)
 
+        micButtonHeight = 45
+        micButton = tk.Button(self, text="M")
+        micButton.place(x = 0, y = self.h - micButtonHeight, width=45, height=micButtonHeight)
+        micButton.bind("<ButtonPress-1>", lambda inp: asking())
         sq_button1.bind("<ButtonPress-1>", self.sq_button1_press)
         sq_button2.bind("<ButtonPress-1>", self.sq_button2_press)
 
@@ -274,7 +282,6 @@ class Window(tk.Tk):
         self.updateOutput(f"Quiz results: {self.current_quiz_score}/{num_quiz_questions} - {self.current_quiz_questions}")
 
 
-        
         
 window = Window()
 
