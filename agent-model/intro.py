@@ -13,7 +13,13 @@ load_dotenv(find_dotenv())
 llm = OpenAI(temperature=0)
 tools = load_tools(["wolfram-alpha", "serpapi"], llm=llm)
 agent = initialize_agent(tools, llm, agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION, verbose=True)
-agent.run()
+
+
+def retMulChoice():
+    list = [(agent.run("Give me a multiple choice question about sea life with the correct answer identified"))]
+    return(list)
+    
+
 
 
 
