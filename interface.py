@@ -213,8 +213,13 @@ class Window(tk.Tk):
 
         # generate quiz
         response = tc.generateQuizFromText(config.text, 5)
-        print(response)
-        self.updateOutput(response)
+        # print(response)
+        # self.updateOutput(response)
+
+        self.quiz_obj = Quiz(response)
+        self.quiz_iteration(self.quiz_obj)
+
+
 
     def updateOutput(self, text_input):
         # self.output_box.config(text=text_input)
