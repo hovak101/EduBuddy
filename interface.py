@@ -27,16 +27,14 @@ Changes to make:
 
 """
 
-
-num_quiz_questions = 5
-
 class Quiz():
-    def __init__(self, quiz_input_string):
+    def __init__(self, quiz_input_string, num_quiz_questions = 5):
+        print(quiz_input_string.split('\n'))
         self.questions = [None for _ in range(num_quiz_questions)]
         lines = quiz_input_string.split("\n")
         for i in range(num_quiz_questions):
             self.questions[i] = {
-                "question": lines[i * 6][3:],
+                "question": lines[i * 4][3:],
                 "alternatives": ["","","",""],
                 "answer": -1
             }
@@ -60,9 +58,10 @@ class Quiz():
 
 
 class Window(tk.Tk):
+    NUM_QUIZ_QUESTIONS = 5
     def __init__(self):
         super().__init__()
-
+        self.configure(bg='white')
         # Check windows
         self.addedDistance = 0
         if (platform.system()) == "Windows":
@@ -212,11 +211,12 @@ class Window(tk.Tk):
         self.context_title.config(text=text1)
 
         # generate quiz
-        response = tc.generateQuizFromText(config.text, 5)
-        # print(response)
+        # response = tc.generateQuizFromText(config.text, 5)
+        response = tc.getMultipleChoiceQuiz(config.text, 5)
+        print(response)
         # self.updateOutput(response)
-
-        self.quiz_obj = Quiz(response)
+        print(response)
+        self.quiz_obj = Quiz(response, Window.NUM_QUIZ_QUESTIONS)
         self.quiz_iteration(self.quiz_obj)
 
 
@@ -276,7 +276,7 @@ class Window(tk.Tk):
         self.quiz_iteration(self.quiz_obj)
 
     def display_quiz_results(self):
-        self.updateOutput(f"Quiz results: {self.current_quiz_score}/{num_quiz_questions} - {self.current_quiz_questions}")
+        self.updateOutput(f"Quiz results: {self.current_quiz_score}/{Window.NUM_QUIZ_QUESTIONS} - {self.current_quiz_questions}")
 
 
         
