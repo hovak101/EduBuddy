@@ -20,7 +20,8 @@ import websockets
 # import cv2
 import asyncio
 import whisper
-load_dotenv("keys.env")
+load_dotenv(find_dotenv())
+
 openai.api_key = os.environ['OPENAI_API_KEY']
 CHUNK = 1024
 FORMAT = pyaudio.paInt16
@@ -174,26 +175,28 @@ def text_to_speech(talk):
 # text_to_speech(talk)
 
 def checking():
+    print(os.environ['OPENAI_API_KEY'])
     audio, sr = recording()
     save_mp3(MP3_FILE, audio, sr)
     emo = []    
-    try:
-        # Create an event loop
-        loop = asyncio.get_event_loop()
+    # try:
+    # Create an event loop
+    loop = asyncio.get_event_loop()
 
-        # Schedule the `go` coroutine to run
-        loop.run_until_complete(go(MP3_FILE, emo))
-        emo = emo[0]['prosody']['predictions'][0]['emotions']
-        if len(emo) == 0:
-            raise FileNotFoundError(f'No data found. Probably because {MP3_FILE} cannot be found in the directory')
-        # Close the event loop
-        loop.close()    
-        talk = speech_to_text(audio)
-    except:
-        time.sleep(60)
-        checking()
+    # Schedule the `go` coroutine to run
+    loop.run_until_complete(go(MP3_FILE, emo))
+    print(emo)
+    emo = emo[0]['prosody']['predictions'][0]['emotions']
+    if len(emo) == 0:
+        raise FileNotFoundError(f'No data found. Probably because {MP3_FILE} cannot be found in the directory')
+    # Close the event loop
+    loop.close()    
+    talk = speech_to_text(audio)
+    # except:
+    #     time.sleep(60)
+    #     checking()
     text_to_speech(talk)
-    checking()
+    # checking()
 
 def asking():
     llm = OpenAI(temperature=0)
