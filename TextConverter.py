@@ -32,8 +32,9 @@ def getTitleFromText(text):
         # input from user data, yo uask to summarize, it will put assistant as "you are a summarizer..."
 
         messages=[
-            {"role": "assistant", "content": "You are someone that generate titles given texts (the title should be about the text and should be creative)."},
-            {"role": "user", "content": "Given the following text, generate a title from 1 to 19 characters: " + text},
+            {"role": "system", "content": "You generate very short title less than 7 words from given texts with a in the middle of the title"},
+            {"role": "assistant", "content": "You are someone that generate a title (the title should be about the text and creative)."},
+            {"role": "user", "content": "Given the following text, generate a title: " + text},
         ],
         temperature=0
     )
@@ -48,7 +49,7 @@ def generateSummaryFromText(text, minimumWords, maximumWords):
         # input from user data, yo uask to summarize, it will put assistant as "you are a summarizer..."
 
         messages=[
-            {"role": "system", "content": "You are a summary writer for a very busy business man so you need to be short, condense, and quick."},
+            {"role": "system", "content": "You are a summary writer for a very busy business man so you need to be short, condense, and quick in form of bullet points."},
             {"role": "assistant", "content": "You are someone that summarizes information on a given topic that user want to know about, make it short and condese."},
             {"role": "user", "content": "Summarize the following information in " + str(minimumWords) + " to " + str(maximumWords) + " words: " + text},
         ],
@@ -72,11 +73,11 @@ def generateQuizFromText(text, numOfQuestions):
 
     return response['choices'][0]['message']['content']
 
-def getMultipleChoiceQuiz(prompt, num):
+def getMultipleChoiceQuiz(prompt, num = 5):
     response = openai.ChatCompletion.create(
         model=MODEL,
         messages=[
-            {"role": "system", "content": "You are a very helpful quiz maker with this exact prompt: with 4 alternatives (1 right, 3 wrong) about {str(prompt)} formatted like this: first line: question, next four lines: alternatives. correct marked with '*' at the end of line. label alternatives 'a.'-'d.' and question '<num>.', try to make a quiz that truely test user's knowledge on the given text so that if they got all correct, they should get key ideas and parts of the text"},
+            {"role": "system", "content": "You are a very helpful quiz maker with this exact prompt: each line less than 100 characters of a question with 4 alternatives (1 right, 3 wrong) about {str(prompt)} formatted like this: first line: question, next four lines: alternatives. correct marked with '*' at the end of line. label alternatives 'a.'-'d.' and question '<num>.', try to make a quiz that truely test user's knowledge on the given text"},
             {"role": "assistant", "content": f"generate {str(num)} questions with 4 alternatives (1 right, 3 wrong) about {str(prompt)} formatted like this: first line: question, next four lines: alternatives. correct marked with '*' at the end of line. label alternatives 'a.'-'d.' and question '<num>.'"},
             {"role": "user", "content": "Make a" + str(num) + " question quiz about " + prompt},
         ],

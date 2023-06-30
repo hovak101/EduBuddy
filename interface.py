@@ -29,12 +29,11 @@ Changes to make:
 
 class Quiz():
     def __init__(self, quiz_input_string, num_quiz_questions = 5):
-        print(quiz_input_string.split('\n'))
         self.questions = [None for _ in range(num_quiz_questions)]
         lines = quiz_input_string.split("\n")
         for i in range(num_quiz_questions):
             self.questions[i] = {
-                "question": lines[i * 4][3:],
+                "question": lines[i * 6][3:],
                 "alternatives": ["","","",""],
                 "answer": -1
             }
@@ -102,7 +101,7 @@ class Window(tk.Tk):
 
         # Context title box
         self.context_title = tk.Label(self, text="Context", bg="lightblue")
-        self.context_title.place(x=3, y=45, w=self.w - 6, h=20)
+        self.context_title.place(x=3, y=45, w=self.w - 6, h=25)
 
         # add icon
         self.icon_size = 60
@@ -194,32 +193,51 @@ class Window(tk.Tk):
             config.text = pyperclip.waitForNewPaste()
         
     def sq_button1_press(self, event):
-        # generate title
-        text1 = tc.getTitleFromText(config.text)
-        self.context_title.config(text=text1)
+        # Destroy old canvas
+        try:
+            self.canvas.destroy()
+        except:
+            pass
 
-        # generate summary
-        minimumWords = 0
-        maximumWords = tc.getResponseLengthFromText(config.text)
-        response = tc.generateSummaryFromText(config.text, minimumWords, maximumWords)
-        # print(response)
-        self.updateOutput(response)
+        if config.text != '':
+            if len(config.text.split(' ')) >= 30:
+                # generate title
+                self.context_title.config(text=textwrap.fill(tc.getTitleFromText(config.text), width=self.w - 20))
+                # generate summary
+                minimumWords = 0
+                maximumWords = tc.getResponseLengthFromText(config.text)
+                response = tc.generateSummaryFromText(config.text, minimumWords, maximumWords)
+                # print(response)
+                self.updateOutput(response)
+            else:
+                self.updateOutput('')
+                self.context_title.config(text="Please choose a longer text to summarize")
+        else:
+            self.updateOutput('')
+            self.context_title.config(text="No text found! Choose a new text if this keep happens")
 
     def sq_button2_press(self, event):
+        
         # generate title
-        text1 = tc.getTitleFromText(config.text)
-        self.context_title.config(text=text1)
-
-        # generate quiz
-        # response = tc.generateQuizFromText(config.text, 5)
-        response = tc.getMultipleChoiceQuiz(config.text, 5)
-        print(response)
-        # self.updateOutput(response)
-        print(response)
-        self.quiz_obj = Quiz(response, Window.NUM_QUIZ_QUESTIONS)
-        self.quiz_iteration(self.quiz_obj)
-
-
+        self.updateOutput('')
+        # self.geometry("800x1200")
+        if config.text != '':
+            if len(config.text.split(' ')) >= 50:
+                txt = tc.getTitleFromText(config.text)
+                print(txt)
+                self.context_title.config(text=textwrap.fill(txt, width=self.w - 40), width = self.w - 60)
+                # generate quiz
+                response = tc.getMultipleChoiceQuiz(config.text, 5)
+                self.quiz_obj = Quiz(response, Window.NUM_QUIZ_QUESTIONS)
+                self.quiz_iteration(self.quiz_obj)
+                self.geometry(f"+{self.x}+{self.y-self.addedDistance}")
+                self.geometry(f"{self.w}x{self.h}")
+            else:
+                self.updateOutput('')
+                self.context_title.config(text="Please choose a longer text to make quiz")
+        else:
+            self.updateOutput('')
+            self.context_title.config(text="No text found! Choose a new text if this keep happens")
 
     def updateOutput(self, text_input):
         # self.output_box.config(text=text_input)
@@ -236,47 +254,54 @@ class Window(tk.Tk):
 
     def quiz_iteration(self, quiz_obj):
         if (len(quiz_obj.questions) == 0):
-            self.question.destroy()
-            for i in self.quiz_alternative_buttons:
-                i.destroy()
+            self.canvas.destroy()
             self.display_quiz_results()
             return
+
+        # Destroy old canvas
+        try:
+            self.canvas.destroy()
+        except:
+            pass
+
         # make quiz question and button element from Quiz obj
-        wrapped_text = textwrap.fill(quiz_obj.questions[0]["question"], width=self.w)
-        self.question = tk.Label(self, text=wrapped_text, bg="gray")
-        self.quiz_alternative_buttons = [
-            tk.Button(self, text="1." + quiz_obj.questions[0]["alternatives"][0]),
-            tk.Button(self, text="2." + quiz_obj.questions[0]["alternatives"][1]),
-            tk.Button(self, text="3." + quiz_obj.questions[0]["alternatives"][2]),
-            tk.Button(self, text="4." + quiz_obj.questions[0]["alternatives"][3])
-        ]
-        self.current_quiz_ans = quiz_obj.questions[0]["answer"]
-
-        # place on window
-        self.question.place(x=0, y=65, w=self.w, h=60)
+        self.canvas = tk.Canvas(self, width=self.w, height=300)
+        wrapped_text = textwrap.fill(quiz_obj.questions[0]["question"], width=self.w - 20)
+        self.question = self.canvas.create_text(self.w // 2, 30, text=wrapped_text, width = self.w - 40)
+        self.quiz_alternative_buttons = []
         for i in range(4):
-            self.quiz_alternative_buttons[i].place(x=0, y=(125 + 45*(i+1)), w=self.w, h=45)
+            x1, y1, x2, y2 = 10, 65 + i * 45, self.w - 10, 110 + i * 45
+            rect = self.canvas.create_rectangle(x1, y1, x2, y2, fill="white")
+            text = self.canvas.create_text((x1 + x2) // 2, (y1 + y2) // 2,
+                                        text=textwrap.fill(f"""{i+1}. {quiz_obj.questions[0]["alternatives"][i]}""", width = self.w - 20), width = self.w - 40)
+            self.canvas.tag_bind(rect, "<Button-1>", lambda event, choice=i: self.quiz_button_click(event, choice))
+            self.canvas.tag_bind(text, "<Button-1>", lambda event, choice=i: self.quiz_button_click(event, choice))
+            self.quiz_alternative_buttons.append((rect, text))
 
-            self.quiz_alternative_buttons[i].bind("<ButtonPress-1>", self.quiz_button_click)
-
-        # add to list of questions for this quiz only
-        self.current_quiz_questions.append([wrapped_text, quiz_obj.questions[0]["alternatives"][self.current_quiz_ans]])
-
+        self.current_quiz_ans = quiz_obj.questions[0]["answer"]
+        self.current_quiz_questions.append([wrapped_text])
         quiz_obj.questions.pop(0)
-        
-    def quiz_button_click(self, event):
-        answered = int(event.widget.cget("text")[0]) - 1
-        print(answered == self.current_quiz_ans)
-        if (answered == self.current_quiz_ans):
-            self.current_quiz_score += 1
-        print(self.current_quiz_ans)
-        self.quiz_alternative_buttons[answered].configure(bg="red")
-        self.quiz_alternative_buttons[self.current_quiz_ans].configure(bg="green")
+        self.canvas.place(x=0, y=(-100 + 45*(i+1)), w=self.w, h=300)
 
-        self.quiz_iteration(self.quiz_obj)
+    def quiz_button_click(self, event, choice):
+        if (choice == self.current_quiz_ans):
+            self.current_quiz_score += 1
+        for rect, text in self.quiz_alternative_buttons:
+            self.canvas.itemconfig(rect, fill="white")
+        self.canvas.itemconfig(self.quiz_alternative_buttons[choice][0], fill="red")
+        self.canvas.itemconfig(self.quiz_alternative_buttons[self.current_quiz_ans][0], fill="green")
+        self.current_quiz_questions[-1].append(self.canvas.itemcget(self.quiz_alternative_buttons[choice][1], "text").strip().split(maxsplit=1)[1])
+        self.current_quiz_questions[-1].append(self.canvas.itemcget(self.quiz_alternative_buttons[self.current_quiz_ans][1], "text").strip().split(maxsplit=1)[1])
+        self.after(ms = 2000, func= lambda: self.quiz_iteration(self.quiz_obj))
+
 
     def display_quiz_results(self):
-        self.updateOutput(f"Quiz results: {self.current_quiz_score}/{Window.NUM_QUIZ_QUESTIONS} - {self.current_quiz_questions}")
+        output = f"Quiz results: {self.current_quiz_score}/{Window.NUM_QUIZ_QUESTIONS}:\n\n"
+        print(self.current_quiz_questions)
+        for id, vals in enumerate(self.current_quiz_questions):
+            # print(id, vals)
+            output += f"Question {id + 1}: {vals[0]}\nResult: {'Correct' if vals[1] == vals[2] else 'Incorrect'}!\nYour choice: {vals[1]}\nAnswer: {vals[2]}\n\n"
+        self.updateOutput(output)
 
 
         
