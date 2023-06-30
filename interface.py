@@ -202,7 +202,9 @@ class Window(tk.Tk):
         if config.text != '':
             if len(config.text.split(' ')) >= 30:
                 # generate title
-                self.context_title.config(text=textwrap.fill(tc.getTitleFromText(config.text), width=self.w - 20))
+                title = tc.getTitleFromText(config.text)
+                # print(title.split('"')[1])
+                self.context_title.config(text=textwrap.fill(title.split('"')[1], width=self.w - 20))
                 # generate summary
                 minimumWords = 0
                 maximumWords = tc.getResponseLengthFromText(config.text)
@@ -223,9 +225,9 @@ class Window(tk.Tk):
         # self.geometry("800x1200")
         if config.text != '':
             if len(config.text.split(' ')) >= 50:
-                txt = tc.getTitleFromText(config.text)
-                print(txt)
-                self.context_title.config(text=textwrap.fill(txt, width=self.w - 40), width = self.w - 60)
+                title = tc.getTitleFromText(config.text)
+                # print(title.split('"')[1])
+                self.context_title.config(text=textwrap.fill(title.split('"')[1], width=self.w - 20))
                 # generate quiz
                 response = tc.getMultipleChoiceQuiz(config.text, 5)
                 self.quiz_obj = Quiz(response, Window.NUM_QUIZ_QUESTIONS)
@@ -297,7 +299,7 @@ class Window(tk.Tk):
 
     def display_quiz_results(self):
         output = f"Quiz results: {self.current_quiz_score}/{Window.NUM_QUIZ_QUESTIONS}:\n\n"
-        print(self.current_quiz_questions)
+        # print(self.current_quiz_questions)
         for id, vals in enumerate(self.current_quiz_questions):
             # print(id, vals)
             output += f"Question {id + 1}: {vals[0]}\nResult: {'Correct' if vals[1] == vals[2] else 'Incorrect'}!\nYour choice: {vals[1]}\nAnswer: {vals[2]}\n\n"

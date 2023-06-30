@@ -32,9 +32,9 @@ def getTitleFromText(text):
         # input from user data, yo uask to summarize, it will put assistant as "you are a summarizer..."
 
         messages=[
-            {"role": "system", "content": "You generate very short title less than 7 words from given texts with a in the middle of the title"},
-            {"role": "assistant", "content": "You are someone that generate a title (the title should be about the text and creative)."},
-            {"role": "user", "content": "Given the following text, generate a title: " + text},
+            {"role": "system", "content": "You generate one very short title less than 7 words from given texts with a in the middle of the title"},
+            {"role": "assistant", "content": "You are someone that generate one title (the title should be about the text and creative)."},
+            {"role": "user", "content": "Given the following text, generate one title: " + text},
         ],
         temperature=0
     )
