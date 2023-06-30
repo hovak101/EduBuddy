@@ -17,7 +17,7 @@ def translateText(text):
     response = openai.ChatCompletion.create(
         model=MODEL,
         messages=[
-            {"role": "assistant", "content": "You are a translator."},
+            {"role": "assistant", "content": "You are a translator for someone only know English (try to translate and keep the tone and the meaning closest)."},
             {"role": "user", "content": "Translate the following text into English and recognize the language: " + text},
         ],
         temperature=0
@@ -32,8 +32,9 @@ def getTitleFromText(text):
         # input from user data, yo uask to summarize, it will put assistant as "you are a summarizer..."
 
         messages=[
-            {"role": "assistant", "content": "You are someone that generate titles given texts."},
-            {"role": "user", "content": "Given the following text, generate a title from 1 to 19 characters: " + text},
+            {"role": "system", "content": "You generate very short title less than 7 words from given texts with a in the middle of the title"},
+            {"role": "assistant", "content": "You are someone that generate a title (the title should be about the text and creative)."},
+            {"role": "user", "content": "Given the following text, generate a title: " + text},
         ],
         temperature=0
     )
@@ -48,8 +49,8 @@ def generateSummaryFromText(text, minimumWords, maximumWords):
         # input from user data, yo uask to summarize, it will put assistant as "you are a summarizer..."
 
         messages=[
-            {"role": "system", "content": "You are a summary writer."},
-            {"role": "assistant", "content": "You are someone that summarizes information on a given topic."},
+            {"role": "system", "content": "You are a summary writer for a very busy business man so you need to be short, condense, and quick in form of bullet points."},
+            {"role": "assistant", "content": "You are someone that summarizes information on a given topic that user want to know about, make it short and condese."},
             {"role": "user", "content": "Summarize the following information in " + str(minimumWords) + " to " + str(maximumWords) + " words: " + text},
         ],
         temperature=0
@@ -64,7 +65,7 @@ def generateQuizFromText(text, numOfQuestions):
         #decide which system, assistant to use.
 
         messages=[
-            {"role": "assistant", "content": "You are someone that creates question on a given topic"},
+            {"role": "assistant", "content": "You are someone that creates questions on a given topic for test user's knowledge about a given text. Question must be about the text, ask about main topic or key parts or ideas of the text"},
             {"role": "user", "content": "Create " + str(numOfQuestions) + " questions based off of the following text: " + text},
         ],
         temperature=0
@@ -72,11 +73,11 @@ def generateQuizFromText(text, numOfQuestions):
 
     return response['choices'][0]['message']['content']
 
-def getMultipleChoiceQuiz(prompt, num):
+def getMultipleChoiceQuiz(prompt, num = 5):
     response = openai.ChatCompletion.create(
         model=MODEL,
         messages=[
-            {"role": "system", "content": "You are a very helpful quiz maker"},
+            {"role": "system", "content": "You are a very helpful quiz maker with this exact prompt: each line less than 100 characters of a question with 4 alternatives (1 right, 3 wrong) about {str(prompt)} formatted like this: first line: question, next four lines: alternatives. correct marked with '*' at the end of line. label alternatives 'a.'-'d.' and question '<num>.', try to make a quiz that truely test user's knowledge on the given text"},
             {"role": "assistant", "content": f"generate {str(num)} questions with 4 alternatives (1 right, 3 wrong) about {str(prompt)} formatted like this: first line: question, next four lines: alternatives. correct marked with '*' at the end of line. label alternatives 'a.'-'d.' and question '<num>.'"},
             {"role": "user", "content": "Make a" + str(num) + " question quiz about " + prompt},
         ],
@@ -117,7 +118,7 @@ def sendGptRequest(prompt, context):
     response = openai.ChatCompletion.create(
         model=MODEL,
         messages=[
-            {"role": "system", "content": "You are a an assistant that helps user requests based on a given context"},
+            {"role": "system", "content": "You are a an assistant that helps user requests based on a given context. Decide what is the user's struggle or request and try to help as much as you can"},
             {"role": "assistant", "content": "You are given the following context:" + context},
             {"role": "user", "content": prompt},
         ],
