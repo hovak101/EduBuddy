@@ -25,7 +25,7 @@ load_dotenv(find_dotenv())
 openai.api_key = os.environ['OPENAI_API_KEY']
 CHUNK = 1024
 FORMAT = pyaudio.paInt16
-CHANNELS = 2
+CHANNELS = 1
 RATE = 20000
 RECORD_SECONDS = 10
 WAVE_FILE = "output"
