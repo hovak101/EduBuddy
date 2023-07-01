@@ -23,14 +23,16 @@ from langchain.chat_models import ChatOpenAI
 # import ctypes
 # import objc
 
-
 """
 Changes to make:
 - icons for all buttons
 - rounded corners
 - smooth animation for expanding/compressing window
 - minimize on click buddy (maybe right click for settings)
+- open close button (and moving it) with messagebox to check if user really want to close
 
+- threadings and button for memory
+- show user the memory if they wish to do so
 """
 
 
