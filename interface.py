@@ -71,51 +71,73 @@ class Window(tk.Tk):
         # self.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.configure(bg = "white")
         # Check windows
-        self.addedDistance = 0
-        llm = ChatOpenAI(model_name="gpt-4", temperature=0.9)
-        self.memory = ConversationSummaryMemory(llm=llm)
+        self.addedDistance = 30
+        llm = ChatOpenAI(model_name = "gpt-4", temperature = 0.9)
+        self.memory = ConversationSummaryMemory(llm = llm)
         # memory.save_context({"input": "Hi!"}, {"output": "Hello there!"})
         if (platform.system()) == "Windows":
             self.addedDistance = 80
         self.save = ""
         self.title("EduBuddy")
+        self.before_text = 0
         # self.overrideredirect(
         #     True
         # )  # Remove window decorations (title, borders, exit & minimize buttons)
         self.attributes("-topmost", True)
-
+        self.messagebox_opening = False
         # screen info
         screen = get_monitors()[0]  # number can be changed ig
         self.screen_w = screen.width
         self.screen_h = screen.height
 
         # Set the window's initial position
-        self.padding = 15
+        self.padding = 0
         self.w = 400  # was 200
         self.h = 500  # was 300
-        self.x = self.screen_w - self.w - self.padding  # X coordinate
-        self.y = self.screen_h - self.h - self.padding  # Y coordinate
+        self.x = int(self.screen_w * 0.995) - self.w - self.padding  # X coordinate
+        self.y = int(self.screen_h * 0.995) - self.h - self.padding  # Y coordinate
 
         self.geometry(f"+{self.x}+{self.y-self.addedDistance}")
         self.geometry(f"{self.w}x{self.h}")
-
-        # quiz/submit button
-        summarize_button = tk.Button(self, text = "Summarize")
-        quiz_button = tk.Button(self, text = "Quiz")
         sq_button_height = 45
-        summarize_button.place(x = 0, y = 0, width = self.w / 2, height = sq_button_height)
-        quiz_button.place(x = self.w / 2, y = 0, width = self.w / 2, height = sq_button_height)
 
-        micButtonHeight = 45
-        self.micButton = tk.Button(self, text="Mic")
-        # micButton.place(x = 0, y = self.h - micButtonHeight, width = 45, height = micButtonHeight)
-        self.micButton.place(x = 0, y = self.h - 48, height = micButtonHeight)
-        self.micButton.bind("<ButtonPress-1>", lambda inp: asking())
-        summarize_button.bind("<ButtonPress-1>", self.summarize_button_press)
-        quiz_button.bind("<ButtonPress-1>", self.quiz_button_press)
+        # summarize button
+        summarize_button = tk.Button(self, text = "Summarize", command = self.summarize_button_press)
+        summarize_button.place(x = 0, y = 0, width = self.w / 5, height = sq_button_height)
+        
+        # erase the screen
+        erase_button = tk.Button(self, text = "Erase", command = lambda ind: self.output_box.delete("1.0", tk.END))
+        erase_button.place(x = self.w / 5, y = 0, width = self.w / 5, height = sq_button_height)
+
+        # show memory
+        show_button = tk.Button(self, text = "Show", command = self.show_button_press)
+        show_button.place(x = self.w * 2 / 5, y = 0, width = self.w / 5, height = sq_button_height)
+
+        # save memory
+        save_button = tk.Button(self, text = "Save", command = self.save_button_click)
+        save_button.place(x = self.w * 3 / 5, y = 0, width = self.w / 5, height = sq_button_height)
+
+        # quiz button
+        quiz_button = tk.Button(self, text = "Quiz", command = self.quiz_button_press)
+        quiz_button.place(x = self.w * 4 / 5, y = 0, width = self.w / 5, height = sq_button_height)
+
+        # button get from microphone
+        mic_button = tk.Button(self, text = "From Mic", command = asking)
+        # micButton.place(x = self.w / 2 - 45 / 2, y = self.h - 48, w = 45, h = 45)
+        mic_button.place(x = self.w / 5, y = self.h - 50, width = self.w / 5, height = sq_button_height)
+
+        # button get from local file
+        file_button = tk.Button(self, text = "From File", command = self.file_button_click)
+        # file_button.place(x = self.w * 3 / 4 - 135 / 4, y = self.h - 48, w = 45, h = 45)
+        file_button.place(x = self.w * 2 / 5, y = self.h - 50, width = self.w / 5, height = sq_button_height)
+
+        # button get from text
+        text_button = tk.Button(self, text = "From Text", command = self.text_button_press)
+        # text_button.place(x = self.w / 4 - 10, y = self.h - 48, w = 45, h = 45)
+        text_button.place(x = self.w * 3 / 5, y = self.h - 50, width = self.w / 5, height = sq_button_height)
 
         # Context title box
-        self.context_title = tk.Label(self, text="Context", bg="lightblue")
+        self.context_title = tk.Label(self, text = "Context", bg = "lightblue")
         self.context_title.place(x = 3, y = 45, w = self.w - 6, h = 25)
 
         # add icon
@@ -140,19 +162,15 @@ class Window(tk.Tk):
 
         # # Text input field
         # self.text_box = tk.Text(self, borderwidth = 0, highlightthickness = 0)
-        self.updateOutput("")
+        self.output_box.delete("1.0", tk.END)
         # self.text_box.place(x = 3, y = self.h - 65 - 60, w = self.w - 6, h = 65)
-        # self.text_box.bind("<Return>", self.submit_input)
-        self.output_box.bind("<Return>", self.submit_input)
+        # self.text_box.bind("<Return>", self.text_button_press)
+        # self.output_box.bind("<Return>", self.text_button_press)
 
         # Bind mouse events
         self.bind("<ButtonPress-1>", self.on_button_press)
         self.bind("<B1-Motion>", self.on_button_motion)
         self.bind("<ButtonRelease-1>", self.on_button_release)
-
-        # get local file
-        file_button = tk.Button(self, text="File", command = self.open_file_dialog)
-        file_button.place(x = self.w / 2 - 45 / 2, y = self.h - 48, w = 45, h = 45)
         
         # Quiz variables
         self.current_quiz_ans = -1
@@ -162,17 +180,18 @@ class Window(tk.Tk):
         self.quiz_alternative_buttons = [None, None, None, None]
 
     def on_closing(self):
+        self.messagebox_opening = True
         if messagebox.askokcancel("Quit", "Do you want to quit?"):
             self.destroy()
+        self.messagebox_opening = False
 
-    def open_file_dialog(self):
-        # self.updateOutput("")
-        self.context_title.config(text="Read from file(s)")
-        self.output_box.configure(state="disabled")
+    def file_button_click(self):
+        self.context_title.config(text = "Read from file(s)")
+        self.output_box.configure(state = "disabled")
         file_path = filedialog.askopenfilenames(
-            parent = self, title="Choose one or multiple file(s)"
+            parent = self, title = "Choose one or multiple file(s)"
         )
-        self.output_box.configure(state="normal")
+        self.output_box.configure(state = "normal")
         # file_path = filedialog.askopenfilenames(parent = self, title='Choose a file', filetypes = [('All files', '*.*')])
         # folder_path = filedialog.askdirectory(parent = self, title='Choose a folder')
         if len(file_path) != 0:
@@ -183,7 +202,7 @@ class Window(tk.Tk):
             # query index
             query_engine = index.as_query_engine()
             self.context_title.config(
-                text="Enter your question about the file anywhere below"
+                text = "Enter your question about the file anywhere below"
             )
             summary = query_engine.query("Summarize all!")
             print("\n", summary, end = "\n\n")
@@ -204,54 +223,56 @@ class Window(tk.Tk):
             # print(len(documents))
 
     def on_button_press(self, event):
-        # Capture the initial mouse position and window position
-        self.x = event.x_root
-        self.y = event.y_root
-        self.offset_x = self.winfo_x()
-        self.offset_y = self.winfo_y()
+        if not self.messagebox_opening:
+            # Capture the initial mouse position and window position
+            self.x = event.x_root
+            self.y = event.y_root
+            self.offset_x = self.winfo_x()
+            self.offset_y = self.winfo_y()
 
     def on_button_motion(self, event):
-        # Calculate the new window position based on mouse movement
-        new_x = self.offset_x + (event.x_root - self.x)
-        new_y = self.offset_y + (event.y_root - self.y)
-        self.geometry(f"+{new_x}+{new_y}")
+        if not self.messagebox_opening:
+            # Calculate the new window position based on mouse movement
+            new_x = self.offset_x + (event.x_root - self.x)
+            new_y = self.offset_y + (event.y_root - self.y)
+            self.geometry(f"+{new_x}+{new_y}")
 
     def on_button_release(self, event):
-        is_left = event.x_root - event.x + self.w / 2 < self.screen_w / 2
-        is_up = event.y_root - event.y + self.h / 2 < self.screen_h / 2
+        if not self.messagebox_opening:
+            is_left = event.x_root - event.x + self.w / 2 < self.screen_w / 2
+            is_up = event.y_root - event.y + self.h / 2 < self.screen_h / 2
 
-        new_x = self.padding if (is_left) else self.screen_w - self.w - self.padding
-        new_y = (
-            self.padding + self.addedDistance
-            if (is_up)
-            else self.screen_h - self.h - self.padding - self.addedDistance
-        )
+            new_x = self.padding if (is_left) else self.screen_w - self.w - self.padding
+            new_y = (
+                self.padding + self.addedDistance
+                if (is_up)
+                else self.screen_h - self.h - self.padding - self.addedDistance
+            )
 
-        # Move back to each side (vertical and horizontal) and maybe swap
-        if is_left:
-            if self.was_right:
-                self.image = self.image.transpose(Image.FLIP_LEFT_RIGHT)
-                self.image_tk = ImageTk.PhotoImage(self.image)
-                self.img_label = tk.Label(self, image = self.image_tk)
-                self.was_right = not self.was_right
-            self.img_label.place(x = 0, y = self.h - self.icon_size)
-        elif not is_left:
-            if not self.was_right:
-                self.image = self.image.transpose(Image.FLIP_LEFT_RIGHT)
-                self.image_tk = ImageTk.PhotoImage(self.image)
-                self.img_label = tk.Label(self, image = self.image_tk)
-                self.was_right = not self.was_right
-            self.img_label.place(x = self.w - self.icon_size, y = self.h - self.icon_size)
+            # Move back to each side (vertical and horizontal) and maybe swap
+            if is_left:
+                if self.was_right:
+                    self.image = self.image.transpose(Image.FLIP_LEFT_RIGHT)
+                    self.image_tk = ImageTk.PhotoImage(self.image)
+                    self.img_label = tk.Label(self, image = self.image_tk)
+                    self.was_right = not self.was_right
+                self.img_label.place(x = 0, y = self.h - self.icon_size)
+            elif not is_left:
+                if not self.was_right:
+                    self.image = self.image.transpose(Image.FLIP_LEFT_RIGHT)
+                    self.image_tk = ImageTk.PhotoImage(self.image)
+                    self.img_label = tk.Label(self, image = self.image_tk)
+                    self.was_right = not self.was_right
+                self.img_label.place(x = self.w - self.icon_size, y = self.h - self.icon_size)
 
-        self.geometry(f"+{new_x}+{new_y}")
+            self.geometry(f"+{new_x}+{new_y}")
 
     def waitAndReturnNewText(self):
         while True:
             config.text = pyperclip.waitForNewPaste()
 
-    def summarize_button_press(self, event):
-        # self.updateOutput("")
-        self.output_box.configure(state="disabled")
+    def summarize_button_press(self):
+        self.output_box.configure(state = "disabled")
         # Destroy old canvas
         try:
             self.canvas.destroy()
@@ -274,28 +295,31 @@ class Window(tk.Tk):
                     text, minimumWords, maximumWords
                 )
                 # print(response)
-                # self.updateOutput(response)
                 # print(response[:100])
-                self.output_box.configure(state="normal")
+                self.output_box.configure(state = "normal")
                 self.output_box.insert(tk.END, f"\nSummary:\n{response}\n")
+                self.before_text = len(self.output_box.get("1.0", tk.END))
                 self.save += "(Summary: " + response + "), "
             else:
-                self.output_box.configure(state="normal")
+                self.output_box.configure(state = "normal")
                 self.context_title.config(
-                    text="Please choose a longer text to summarize"
+                    text = "Please choose a longer text to summarize"
                 )
         else:
-            self.output_box.configure(state="normal")
+            self.output_box.configure(state = "normal")
             self.context_title.config(
-                text="No text found! Choose a new text if this keep happens"
+                text = "No text found! Choose a new text if this keep happens"
             )
 
-    def quiz_button_press(self, event):
+    def quiz_button_press(self):
         # generate title
         # messagebox.showinfo("Information", "This is an information messagebox")
+        self.messagebox_opening = True
+        print(self.output_box.get("1.0", tk.END))
         if messagebox.askyesno("Quiz", "Are you sure you are ready for the quiz? Also, if you want to save this conversation, click cancel and click 'Save'"):
-            self.updateOutput("")
-            self.output_box.configure(state="disabled")
+            self.messagebox_opening = False
+            self.output_box.delete("1.0", tk.END)
+            self.output_box.configure(state = "disabled")
             # self.geometry("800x1200")
             text = ' '.join(re.split(" \t\n", config.text))
             print(len(text), text[:100], )
@@ -311,40 +335,28 @@ class Window(tk.Tk):
                     response = tc.getMultipleChoiceQuiz(text, 5)
                     self.quiz_obj = Quiz(response, Window.NUM_QUIZ_QUESTIONS)
                     self.quiz_iteration(self.quiz_obj)
-                    self.geometry(f"+{self.x}+{self.y-self.addedDistance}")
-                    self.geometry(f"{self.w}x{self.h}")
                 else:
-                    # self.updateOutput("")
                     self.context_title.config(
-                        text="Please choose a longer text to make quiz"
+                        text = "Please choose a longer text to make quiz"
                     )
             else:
-                # self.updateOutput("")
                 self.context_title.config(
-                    text="No text found! Choose a new text if this keep happens"
+                    text = "No text found! Choose a new text if this keep happens"
                 )
-            self.output_box.configure(state="normal")
+            self.output_box.configure(state = "normal")
 
-    def updateOutput(self, text_input):
-        # self.output_box.config(text = text_input)
-        self.output_box.configure(state="normal")
-        self.output_box.delete("1.0", tk.END)
-        self.output_box.insert(tk.END, text_input)
+    def show_button_press(self):
+        messagebox.showinfo(title = "Memory", message = f"Unsaved: {self.save}\nSaved: {self.memory.load_memory_variables({})}")
 
-    # def submit_input(self, event):
-    #     # print("YOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
-    #     self.text_input = self.text_box.get("1.0", "end-1c")
-    #     self.output_box.delete("1.0", tk.END)
-    #     str1 = tc.sendGptRequest(self.text_input, config.text)
-    #     self.updateOutput(str1)
-    def submit_input(self, event):
+    def text_button_press(self):
         # print("YOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
         # print(self.text_box.get("1.0", "end-1c"))
-        text = ' '.join(re.split(" \t\n", self.output_box.get("1.0", "end-1c")))
+        text = ' '.join(re.split(" \t\n", self.output_box.get("1.0", "end-1c")[self.before_text:]))
+        print(text)
         # self.output_box.insert(tk.END, '\n')
         # self.text_input = txt
         # self.output_box.delete("1.0", tk.END)
-        str1 = tc.sendGptRequest(text, config.text, self.memory)
+        str1 = tc.sendGptRequest(text, config.text)#, self.memory)
         try:
             output ='\n'.join(str1.split('\n\n')[1:])
             self.save += "(Q: " + text + " and A: " + str1 + "), "
@@ -355,8 +367,9 @@ class Window(tk.Tk):
         # print(output)
         # print(len(str1), len(str1.split('\n\n')), len(str1.split('\n')))
         self.output_box.insert(tk.END, '\n\n' + output + '\n')
+        self.before_text = len(self.output_box.get("1.0", tk.END))
         return 'break'
-        # Run your function here. And then with the gpt output, run updateOutput function above this function
+        # Run your function here. And then with the gpt output, run insert it into output box
 
     def quiz_iteration(self, quiz_obj):
         if len(quiz_obj.questions) == 0:
@@ -381,7 +394,7 @@ class Window(tk.Tk):
         self.quiz_alternative_buttons = []
         for i in range(4):
             x1, y1, x2, y2 = 10, 65 + i * 45, self.w - 10, 110 + i * 45
-            rect = self.canvas.create_rectangle(x1, y1, x2, y2, fill="white")
+            rect = self.canvas.create_rectangle(x1, y1, x2, y2, fill = "white")
             text = self.canvas.create_text(
                 (x1 + x2) // 2,
                 (y1 + y2) // 2,
@@ -408,18 +421,14 @@ class Window(tk.Tk):
         quiz_obj.questions.pop(0)
         self.canvas.place(x = 0, y = (-100 + 45 * (i + 1)), w = self.w, h = 300)
 
-    # def get_input(self):
-    #     input_text = self.entry.get()
-    #     print(input_text)
-
     def quiz_button_click(self, event, choice):
         if choice == self.current_quiz_ans:
             self.current_quiz_score += 1
         for rect, text in self.quiz_alternative_buttons:
-            self.canvas.itemconfig(rect, fill="white")
-        self.canvas.itemconfig(self.quiz_alternative_buttons[choice][0], fill="red")
+            self.canvas.itemconfig(rect, fill = "white")
+        self.canvas.itemconfig(self.quiz_alternative_buttons[choice][0], fill = "red")
         self.canvas.itemconfig(
-            self.quiz_alternative_buttons[self.current_quiz_ans][0], fill="green"
+            self.quiz_alternative_buttons[self.current_quiz_ans][0], fill = "green"
         )
         self.current_quiz_questions[-1].append(
             self.canvas.itemcget(self.quiz_alternative_buttons[choice][1], "text")
@@ -448,8 +457,9 @@ class Window(tk.Tk):
                 pass
         self.save += "(Quiz:" + ' '.join(re.split(" \t\n", str(self.current_quiz_questions))) + "), "
         self.output_box.insert(tk.END, f"\n{output}")
+        self.before_text = len(self.output_box.get("1.0", tk.END))
 
-    def memory_button_click(self, event):
+    def save_button_click(self, event):
         self.memory.save_context({"input": f"""Here is a context for your next request: {self.save}"""},
                                          {"output": f"""Thank you, I will remember and be here for you!"""})
         print(self.memory.load_memory_variables({}))
