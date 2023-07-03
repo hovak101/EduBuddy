@@ -17,9 +17,11 @@ from langchain.memory import ConversationSummaryMemory
 import llama_index
 import re
 import openai
+import json
+from tkinter import ttk
 config.init()
 from langchain.chat_models import ChatOpenAI
-
+import pickle
 # import ctypes
 # import objc
 
@@ -59,21 +61,28 @@ class Quiz:
 
         # self.questions is formatted like this: obj = [{question: "<q>", alternatives: ["alt1", "alt2", "alt3", "alt4"], answer: <0-3>}]
 
-
-# quiz1 = Quiz(tc.getMultipleChoiceQuiz("""Giraffes are majestic creatures known for their towering height, distinctive features, and gentle nature. With long necks, patterned coats, and graceful movements, they symbolize the beauty of the African savanna. These tallest land animals browse treetops, feed on foliage with their prehensile tongues, and exhibit intriguing social structures. Despite their imposing size, giraffes possess a calm demeanor but can defend themselves if threatened. Conservation efforts are crucial to protect giraffes from habitat loss and poaching, ensuring their survival and the preservation of Earth's biodiversity.""", f"{num_quiz_questions}"))
-
-
 class Window(tk.Tk):
     NUM_QUIZ_QUESTIONS = 5
-
+    JSON_NAME = 'EduBuddy_Memory.json'
+    PICKLE_NAME = 'EduBuddy_Memory.pkl'
     def __init__(self, threads : list):
         super().__init__()
+        self.end = False
         self.configure(bg = "white")
+        self.threads = threads
+        self.context = ""
         # Check windows
         self.addedDistance = 0
         llm = ChatOpenAI(model_name = "gpt-4", temperature = 0.9)
-        self.memory = ConversationSummaryMemory(llm = llm)
-        # self.memory.save_context({"input": "Hi!"}, {"output": "Hello there!"})
+        if os.path.exists(Window.PICKLE_NAME):
+            with open(Window.PICKLE_NAME, 'rb') as f:
+                self.memory = pickle.load(f)
+        else:
+            self.memory = ConversationSummaryMemory(llm = llm)
+        # if os.path.exists(Window.JSON_NAME):
+        #     with open(Window.JSON_NAME, 'r') as f:
+        #         memory = json.load(f)
+        #         self.memory.save_context({"input": f"Here is the context from old conversation {memory['history']}"}, {"output": "Okay, I will remember those!"})
         if (platform.system()) == "Windows":
             self.addedDistance = 80
         self.save = ""
@@ -92,81 +101,37 @@ class Window(tk.Tk):
         # Set the window's initial position
         self.padding_w = int(self.screen_w * 0.005)
         self.padding_h = int(self.screen_w * 0.005)
-        # self.w = 400  # was 200
-        # self.h = 500  # was 300
-        # self.x = int(self.screen_w * 0.995) - self.w# - self.padding  # X coordinate
-        # self.y = int(self.screen_h * 0.995) - self.h# - self.padding  # Y coordinate
-
-        # self.geometry(f"+{self.x}+{self.y-self.addedDistance}")
-        # self.geometry(f"{self.w}x{self.h}")
-
         self.sq_button_height = 45
 
         # summarize, erase, show, save, quiz, close, microphone, file, text button and textbox
         self.summarize_button = tk.Button(self, text = "Summarize", command = self.summarize_button_press)
-        # self.summarize_button.place(x = 0, y = 0, width = self.w / 5, height = self.sq_button_height)
-        
-        # erase the screen
-        self.erase_button = tk.Button(self, text = "Erase", command = lambda ind: self.output_box.delete("1.0", tk.END))
-        # self.erase_button.place(x = self.w / 5, y = 0, width = self.w / 5, height = self.sq_button_height)
-
-        # show memory
+        self.erase_button = tk.Button(self, text = "Erase", command = self.erase_button_press)
         self.show_button = tk.Button(self, text = "Show", command = self.show_button_press)
-        # self.show_button.place(x = self.w * 2 / 5, y = 0, width = self.w / 5, height = self.sq_button_height)
-
-        # save memory
-        self.save_button = tk.Button(self, text = "Save", command = self.save_button_click)
-        # self.save_button.place(x = self.w * 3 / 5, y = 0, width = self.w / 5, height = self.sq_button_height)
-
-        # quiz button
+        self.save_button = tk.Button(self, text = "Save", command = self.save_button_press)
         self.quiz_button = tk.Button(self, text = "Quiz", command = self.quiz_button_press)
-        # self.quiz_button.place(x = self.w * 4 / 5, y = 0, width = self.w / 5, height = self.sq_button_height)
-
-        # close button
-        self.close_button = tk.Button(self, text = "Close", command = self.close_button_click)
-        # self.close_button.place(x = 0, y = self.h - 50, width = self.w / 5, height = self.sq_button_height)
-
-        # button get from microphone
+        self.close_button = tk.Button(self, text = "Close", command = self.close_button_press)
         self.mic_button = tk.Button(self, text = "From Mic", command = asking)
-        # micButton.place(x = self.w / 2 - 45 / 2, y = self.h - 48, w = 45, h = 45)
-        # self.mic_button.place(x = self.w / 5, y = self.h - 50, width = self.w / 5, height = self.sq_button_height)
-
-        # button get from local file
-        self.file_button = tk.Button(self, text = "From File", command = self.file_button_click)
-        # file_button.place(x = self.w * 3 / 4 - 135 / 4, y = self.h - 48, w = 45, h = 45)
-        # self.file_button.place(x = self.w * 2 / 5, y = self.h - 50, width = self.w / 5, height = self.sq_button_height)
-
-        # button get from text
+        self.file_button = tk.Button(self, text = "From File", command = self.file_button_press)
         self.text_button = tk.Button(self, text = "From Text", command = self.text_button_press)
-        # text_button.place(x = self.w / 4 - 10, y = self.h - 48, w = 45, h = 45)
-        # self.text_button.place(x = self.w * 3 / 5, y = self.h - 50, width = self.w / 5, height = self.sq_button_height)
-
-        # Context title box
         self.context_title = tk.Label(self, text = "Context", bg = "lightblue")
-        # self.context_title.place(x = 3, y = 45, w = self.w - 6, h = 25)
-
-        # add icon
+        
+        
         self.icon_size = 60
         script_dir = os.path.dirname(os.path.abspath(__file__))
         image_path = os.path.join(script_dir, "media", "buddy.png")
-        # print(image_path)
         self.image = Image.open(image_path)
         self.image = self.image.resize((self.icon_size, self.icon_size))
         self.image = self.image.transpose(Image.FLIP_LEFT_RIGHT)
         self.was_right = True
         self.image_tk = ImageTk.PhotoImage(self.image)
         self.img_label = tk.Label(self, image = self.image_tk)
-        # self.img_label.place(x = self.w - self.icon_size, y = self.h - self.icon_size)
 
         # Text output
         self.output_box = tk.Text(self, borderwidth = 0, highlightthickness = 0)
-        # self.output_box.place(x = 3, y = 65, w = self.w - 6, h = 310)
         self.change_size(400, 500)
+
         # # Text input field
-        # self.text_box = tk.Text(self, borderwidth = 0, highlightthickness = 0)
         self.output_box.delete("1.0", tk.END)
-        # self.text_box.place(x = 3, y = self.h - 65 - 60, w = self.w - 6, h = 65)
-        # self.text_box.bind("<Return>", self.text_button_press)
         # self.output_box.bind("<Return>", self.text_button_press)
 
         # Bind mouse events
@@ -191,59 +156,55 @@ class Window(tk.Tk):
         self.geometry(f"{self.w}x{self.h}")
 
         # summarize button
-        # self.summarize_button = tk.Button(self, text = "Summarize", command = self.summarize_button_press)
         self.summarize_button.place(x = 0, y = 0, width = self.w / 5, height = self.sq_button_height)
         
         # erase the screen
-        # self.erase_button = tk.Button(self, text = "Erase", command = lambda ind: self.output_box.delete("1.0", tk.END))
         self.erase_button.place(x = self.w / 5, y = 0, width = self.w / 5, height = self.sq_button_height)
 
         # show memory
-        # self.show_button = tk.Button(self, text = "Show", command = self.show_button_press)
         self.show_button.place(x = self.w * 2 / 5, y = 0, width = self.w / 5, height = self.sq_button_height)
 
         # save memory
-        # self.save_button = tk.Button(self, text = "Save", command = self.save_button_click)
         self.save_button.place(x = self.w * 3 / 5, y = 0, width = self.w / 5, height = self.sq_button_height)
 
         # quiz button
-        # self.quiz_button = tk.Button(self, text = "Quiz", command = self.quiz_button_press)
         self.quiz_button.place(x = self.w * 4 / 5, y = 0, width = self.w / 5, height = self.sq_button_height)
 
         # close button
-        # self.close_button = tk.Button(self, text = "Close", command = self.close_button_click)
         self.close_button.place(x = 0, y = self.h - 50, width = self.w / 5, height = self.sq_button_height)
 
         # button get from microphone
-        # self.mic_button = tk.Button(self, text = "From Mic", command = asking)
-        # micButton.place(x = self.w / 2 - 45 / 2, y = self.h - 48, w = 45, h = 45)
         self.mic_button.place(x = self.w / 5, y = self.h - 50, width = self.w / 5, height = self.sq_button_height)
 
         # button get from local file
-        # self.file_button = tk.Button(self, text = "From File", command = self.file_button_click)
-        # file_button.place(x = self.w * 3 / 4 - 135 / 4, y = self.h - 48, w = 45, h = 45)
         self.file_button.place(x = self.w * 2 / 5, y = self.h - 50, width = self.w / 5, height = self.sq_button_height)
 
         # button get from text
-        # self.text_button = tk.Button(self, text = "From Text", command = self.text_button_press)
-        # text_button.place(x = self.w / 4 - 10, y = self.h - 48, w = 45, h = 45)
         self.text_button.place(x = self.w * 3 / 5, y = self.h - 50, width = self.w / 5, height = self.sq_button_height)
 
         # Context title box
-        # self.context_title = tk.Label(self, text = "Context", bg = "lightblue")
         self.context_title.place(x = 3, y = 45, w = self.w - 6, h = 25)
 
         self.img_label.place(x = self.w - self.icon_size, y = self.h - self.icon_size)
 
         self.output_box.place(x = 3, y = 65, w = self.w - 6, h = (self.h - 2 * self.sq_button_height - 25))
 
-    def close_button_click(self):
+    def close_button_press(self):
         self.messagebox_opening = True
         if messagebox.askokcancel("Quit", "Do you want to quit?"):
+            self.end = True
+            for t in self.threads:
+                print("t", t)
+                t.join()
+                print("t", t)
+            # with open(Window.JSON_NAME, 'w') as f:
+            #     json.dump(self.memory.load_memory_variables({}), f)
+            with open(Window.PICKLE_NAME, 'wb') as f:
+                pickle.dump(self.memory, f)
             self.destroy()
         self.messagebox_opening = False
 
-    def file_button_click(self):
+    def file_button_press(self):
         self.context_title.config(text = "Read from file(s)")
         self.output_box.configure(state = "disabled")
         file_path = filedialog.askopenfilenames(
@@ -277,6 +238,11 @@ class Window(tk.Tk):
             # print("\n", random, end = "\n\n")
             # # print("Selected file:", file_path)
             # print(len(documents))
+
+    # def is_click_in_textbox(self, x, y):
+    #     x1, y1, w, h = 3, 65, self.w - 6, (self.h - 2 * self.sq_button_height - 25)
+    #     x2, y2 = x1 + w, y1 + h
+    #     return x1 <= x <= x2 and y1 <= y <= y2
 
     def on_button_press(self, event):
         if not self.messagebox_opening:
@@ -327,8 +293,11 @@ class Window(tk.Tk):
             self.geometry(f"+{new_x}+{new_y}")
 
     def waitAndReturnNewText(self):
-        while True:
-            config.text = pyperclip.waitForNewPaste()
+        while not self.end:
+            try:
+                config.text = pyperclip.waitForNewPaste(timeout=10)
+            except:
+                pass
 
     def summarize_button_press(self):
         self.output_box.configure(state = "disabled")
@@ -348,9 +317,10 @@ class Window(tk.Tk):
                 # generate summary
                 minimumWords = 0
                 maximumWords = tc.getResponseLengthFromText(text)
-                response = tc.generateSummaryFromText(
-                    text, minimumWords, maximumWords
-                )
+                response = self.run_gpt(tc.generateSummaryFromText, (text, minimumWords, maximumWords))
+                # thread = Thread(target = window.waitAndReturnNewText)
+                # thread.start()
+                # self.threads.append(thread)
                 self.output_box.configure(state = "normal")
                 self.output_box.insert(tk.END, f"\nSummary:\n{response}\n")
                 self.before_text = len(self.output_box.get("1.0", tk.END))
@@ -385,7 +355,7 @@ class Window(tk.Tk):
                         text = textwrap.fill(title.split('"')[1], width = self.w - 20)
                     )
                     # generate quiz
-                    response = tc.getMultipleChoiceQuiz(text, 5)
+                    response = self.run_gpt(tc.getMultipleChoiceQuiz, (text, 5))
                     self.quiz_obj = Quiz(response, Window.NUM_QUIZ_QUESTIONS)
                     self.quiz_iteration(self.quiz_obj)
                 else:
@@ -404,30 +374,33 @@ class Window(tk.Tk):
         new_window.title("Memory")
         t = tk.Text(new_window, borderwidth = 0, highlightthickness = 0)
         t.pack()
-        t.insert(tk.END, f"Unsaved: {self.save}\nSaved: {self.memory.load_memory_variables({})}")
+        t.insert(tk.END, f"Unsaved: {self.save}\nSaved: {self.memory.load_memory_variables({})['history']}")
         t.configure(state = "disabled")
         new_window.grab_set()
         self.wait_window(new_window)
         self.messagebox_opening = False
 
     def text_button_press(self):
-        # print("YOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
-        # print(self.text_box.get("1.0", "end-1c"))
         text = ' '.join(re.split(" \t\n", self.output_box.get("1.0", "end-1c")[max(0, self.before_text-1):]))
-        print(text)
-        str1 = tc.sendGptRequest(text, config.text)#, self.memory)
-        try:
-            output ='\n'.join(str1.split('\n\n')[1:])
-            self.save += "(Q: " + text + " and A: " + str1 + "), "
-            if output == '':
-                raise ValueError
-        except:
-            output = str1
-        self.output_box.insert(tk.END, '\n\n' + output + '\n')
-        self.before_text = len(self.output_box.get("1.0", tk.END))
-        return 'break'
-        # Run your function here. And then with the gpt output, run insert it into output box
-
+        
+        if len(text) >= 2:
+            str1 = self.run_gpt(tc.sendGptRequest, (text, config.text, self.memory))
+            try:
+                output ='\n'.join(str1.split('\n\n')[1:])
+                self.save += "(Q: " + text + " and A: " + str1 + "), "
+                if output == '':
+                    raise ValueError
+            except:
+                output = str1
+            self.output_box.insert(tk.END, '\n\n' + output + '\n')
+            self.before_text = len(self.output_box.get("1.0", tk.END))
+            return 'break'
+            # Run your function here. And then with the gpt output, run insert it into output box
+        else:
+            self.context_title.config(
+                text = "Your text is too short to do any work!"
+            )
+        
     def quiz_iteration(self, quiz_obj):
         if len(quiz_obj.questions) == 0:
             self.canvas.destroy()
@@ -464,12 +437,12 @@ class Window(tk.Tk):
             self.canvas.tag_bind(
                 rect,
                 "<Button-1>",
-                lambda event, choice = i: self.quiz_button_click(event, choice),
+                lambda event, choice = i: self.quiz_choice(event, choice),
             )
             self.canvas.tag_bind(
                 text,
                 "<Button-1>",
-                lambda event, choice = i: self.quiz_button_click(event, choice),
+                lambda event, choice = i: self.quiz_choice(event, choice),
             )
             self.quiz_alternative_buttons.append((rect, text))
 
@@ -478,7 +451,7 @@ class Window(tk.Tk):
         quiz_obj.questions.pop(0)
         self.canvas.place(x = 0, y = (-100 + 45 * (i + 1)), w = self.w, h = 300)
 
-    def quiz_button_click(self, event, choice):
+    def quiz_choice(self, event, choice):
         if choice == self.current_quiz_ans:
             self.current_quiz_score += 1
         for rect, text in self.quiz_alternative_buttons:
@@ -505,30 +478,76 @@ class Window(tk.Tk):
         output = (
             f"Quiz results: {self.current_quiz_score}/{Window.NUM_QUIZ_QUESTIONS}:\n\n"
         )
-        # print(self.current_quiz_questions)
         for id, vals in enumerate(self.current_quiz_questions):
             try:
                 output += f"Question {id + 1}: {vals[0]}\nResult: {'Correct' if vals[1] == vals[2] else 'Incorrect'}!\nYour choice: {vals[1]}\nAnswer: {vals[2]}\n\n"
             except:
-                # print(id, vals)
                 pass
         self.save += "(Quiz:" + ' '.join(re.split(" \t\n", str(self.current_quiz_questions))) + "), "
         self.output_box.insert(tk.END, f"\n{output}")
         self.before_text = len(self.output_box.get("1.0", tk.END))
 
-    def save_button_click(self, event):
-        self.memory.save_context({"input": f"""Here is a context for your next request: {self.save}"""},
+    def save_button_press(self):
+        self.output_box.delete("1.0", tk.END)
+        self.memory.save_context({"input": f"""Here is a context (remember topic and user's info) for future requests: {self.save}"""},
                                          {"output": f"""Thank you, I will remember and be here for you!"""})
-        print(self.memory.load_memory_variables({}))
         self.save = ""
+
+    def load_data(self, func, val, ret):
+        ret[0] = func(*val)
+
+    def run_gpt(self, func, val):
+        ret = [" "]
+        loading_window = LoadingWindow(self, ret)
+        thread = Thread(target=self.load_data, args=(func, val, ret))
+        thread.start()
+        loading_window.grab_set()
+        self.wait_window(loading_window)
+        return ret[0]
+    
+    def erase_button_press(self):
+        llm = ChatOpenAI(model_name = "gpt-4", temperature = 0.9)
+        self.memory = ConversationSummaryMemory(llm = llm)
+        with open(Window.PICKLE_NAME, 'wb') as f:
+            pickle.dump(self.memory, f)
+        self.save = ""
+
+class LoadingWindow(tk.Toplevel):
+    def __init__(self, master, ret):
+        super().__init__(master)
+        self.ret = ret
+        self.title("Loading")
+        label = tk.Label(self, text="Loading, please wait...")
+        label.pack()
+        self.progress = ttk.Progressbar(self, orient=tk.HORIZONTAL, length=200, mode='determinate')
+        self.progress.pack()
+        self.percent = tk.Label(self, text="0%")
+        self.percent.pack()
+        # self.update_progress()
+        t = Thread(target=self.update_progress)
+        t.start()
+
+    def update_progress(self):
+        i = 0
+        while self.ret == [" "]:
+            if i != 99:
+                self.progress['value'] = i+1
+                self.percent['text'] = f"{i+1}%"
+                self.update_idletasks()
+                time.sleep(0.1)
+                i += 1
+            else:
+                continue
+        self.progress['value'] = 100
+        self.percent['text'] = f"100%"
+        time.sleep(2)
+        self.destroy()
+
 
 threads = []
 window = Window(threads)
-
+threads = threads
 thread = Thread(target = window.waitAndReturnNewText)
-threads.append(thread)
 thread.start()
-
+threads.append(thread)
 window.mainloop()
-for t in threads:
-    t.join()

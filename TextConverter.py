@@ -102,12 +102,9 @@ def getResponseLengthFromText(text):
 
     if length < 50:
         return length
-    
     if length < 1000:
         return length // 5
-    
-    else:
-        return 200; 
+    return 200; 
 
 def translateAudio(audioFile):
     audio_file = open(audioFile, "rb")
