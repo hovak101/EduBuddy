@@ -115,14 +115,26 @@ def translateAudio(audioFile):
     return transcript.text
 
 def sendGptRequest(prompt, context, memory = None):
-    response = openai.ChatCompletion.create(
-    model=MODEL,
-    messages=[
-        {"role": "system", "content": "You are a an assistant that helps user requests based on a given context. Decide what is the user's struggle or request and try to help as much as you can"},
-        {"role": "assistant", "content": "You are given the following context:" + context},
-        {"role": "user", "content": prompt},
-    ],
-    temperature=0.2,
-    # memory = memory
-    )
+    if not memory:
+        response = openai.ChatCompletion.create(
+        model=MODEL,
+        messages=[
+            {"role": "system", "content": "You are a an assistant that helps user requests based on a given context. Decide what is the user's struggle or request and try to help as much as you can"},
+            {"role": "assistant", "content": "You are given the following context:" + context},
+            {"role": "user", "content": prompt},
+        ],
+        temperature=0.2,
+        # memory = memory
+        )
+    else:
+        response = openai.ChatCompletion.create(
+        model=MODEL,
+        messages=[
+            {"role": "system", "content": "You are a an assistant that helps user requests based on a given context. Decide what is the user's struggle or request and try to help as much as you can"},
+            {"role": "assistant", "content": "You are given the following context:" + context},
+            {"role": "user", "content": prompt},
+        ],
+        temperature=0.2,
+        memory = memory
+        )
     return(response['choices'][0]['message']['content'])
