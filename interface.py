@@ -103,17 +103,17 @@ class Window(tk.Tk):
         self.sq_button_height = 45
 
         # summarize, erase, show, save, quiz, close, microphone, file, text button and textbox
-        self.summarize_button = tk.Button(self, text = "Summarize", command = self.summarize_button_press)
-        self.erase_button = tk.Button(self, text = "Erase", command = self.erase_button_press)
-        self.show_button = tk.Button(self, text = "Show", command = self.show_button_press)
-        self.save_button = tk.Button(self, text = "Save", command = self.save_button_press)
-        self.quiz_button = tk.Button(self, text = "Quiz", command = self.quiz_button_press)
-        self.close_button = tk.Button(self, text = "Close", command = self.close_button_press)
-        self.mic_button = tk.Button(self, text = "From Mic", command = asking)
-        self.file_button = tk.Button(self, text = "From File", command = self.file_button_press)
-        self.text_button = tk.Button(self, text = "From Text", command = self.text_button_press)
+        self.summarize_button = AButton(self, text = "Summarize", command = self.summarize_button_press)
+        self.erase_button = AButton(self, text = "Erase", command = self.erase_button_press)
+        self.show_button = AButton(self, text = "Show", command = self.show_button_press)
+        self.save_button = AButton(self, text = "Save", command = self.save_button_press)
+        self.quiz_button = AButton(self, text = "Quiz", command = self.quiz_button_press)
+        self.close_button = AButton(self, text = "Close", command = self.close_button_press)
+        self.mic_button = AButton(self, text = "From Mic", command = asking)
+        self.file_button = AButton(self, text = "From File", command = self.file_button_press)
+        self.text_button = AButton(self, text = "From Text", command = self.text_button_press)
         self.context_title = tk.Label(self, text = "Context", bg = "lightblue")
-        
+        self.minimize_button = AButton(self, text='Minimize', command=self.minimize_button_press)
         
         self.icon_size = 60
         script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -144,6 +144,9 @@ class Window(tk.Tk):
         self.current_quiz_questions = []
         self.quiz_obj = None
         self.quiz_alternative_buttons = [None, None, None, None]
+
+    def minimize_button_press(self):
+        self.wm_state('iconic')
 
     def change_size(self, w = None, h = None, changed = None):
         if w is not None:
@@ -258,9 +261,8 @@ class Window(tk.Tk):
             # print(len(documents))
 
     def in_textbox(self, x, y, xx, yy):
-        x1, y1, w, h = 0, 10, self.w - 6, (self.h - 2 * self.sq_button_height - 25)
+        x1, y1, w, h = 0, 30, self.w - 6, (self.h - 2 * self.sq_button_height - 25)
         x2, y2 = x1 + w, y1 + h
-        print(x1, x, xx, x2, y1, y, yy, y2, "|||||", self.w - 6, (self.h - 2 * self.sq_button_height - 25))
         return x1 <= x <= x2 and y1 <= y <= y2
 
     def on_button_press(self, event):
@@ -542,6 +544,18 @@ class LoadingWindow(tk.Toplevel):
         self.percent['text'] = f"100%"
         time.sleep(2)
         self.destroy()
+
+class AButton(tk.Button):
+    def __init__(self, master, **kw):
+        tk.Button.__init__(self, master=master, highlightbackground = "white", **kw)
+        self.bind('<Enter>', self.on_enter)
+        self.bind('<Leave>', self.on_leave)
+
+    def on_enter(self, e):
+        self.config(fg = "darkgray", highlightbackground = "darkgray")
+
+    def on_leave(self, e):
+        self.config(fg = "black", highlightbackground = "white")
 
 
 threads = []
