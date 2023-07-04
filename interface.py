@@ -32,9 +32,6 @@ Changes to make:
 - smooth animation for expanding/compressing window
 - minimize on click buddy (maybe right click for settings)
 - open close button (and moving it) with messagebox to check if user really want to close
-
-- threadings and button for memory
-- show user the memory if they wish to do so
 """
 
 
@@ -71,8 +68,10 @@ class Window(tk.Tk):
         self.configure(bg = "white")
         self.threads = threads
         self.context = ""
+        self.is_left = False
+        self.is_up = False
         # Check windows
-        self.addedDistance = 0
+        self.addedDistance = 25
         llm = ChatOpenAI(model_name = "gpt-4", temperature = 0.9)
         if os.path.exists(Window.PICKLE_NAME):
             with open(Window.PICKLE_NAME, 'rb') as f:
@@ -127,8 +126,8 @@ class Window(tk.Tk):
         self.img_label = tk.Label(self, image = self.image_tk)
 
         # Text output
-        self.output_box = tk.Text(self, borderwidth = 0, highlightthickness = 0)
-        self.change_size(400, 500)
+        self.output_box = tk.Text(self, borderwidth = 0, highlightthickness = 0, font=("Times New Roman", 14))
+        self.change_size(w=400, h=500)
 
         # # Text input field
         self.output_box.delete("1.0", tk.END)
@@ -146,14 +145,27 @@ class Window(tk.Tk):
         self.quiz_obj = None
         self.quiz_alternative_buttons = [None, None, None, None]
 
-    def change_size(self, w, h):
-        self.w = w  # was 200
-        self.h = h  # was 300
-        self.x = self.screen_w - self.w - self.padding_w  # X coordinate
-        self.y = self.screen_h - self.h - self.padding_h  # Y coordinate
+    def change_size(self, w = None, h = None, changed = None):
+        if w is not None:
+            self.w = w  # was 200
+        if h is not None:
+            self.h = h  # was 300
 
-        self.geometry(f"+{self.x}+{self.y-self.addedDistance}")
-        self.geometry(f"{self.w}x{self.h}")
+        # self.x = self.screen_w - self.w - self.padding_w  # X coordinate
+        # self.y = self.screen_h - self.h - self.padding_h  # Y coordinate
+
+        self.x = self.padding_w if self.is_left else self.screen_w - self.w - self.padding_w
+        self.y = self.padding_h + self.addedDistance if self.is_up else self.screen_h - self.h - self.padding_h #- self.addedDistance
+        if changed:
+            self.img_label.destroy()
+            self.image = self.image.transpose(Image.FLIP_LEFT_RIGHT)
+            self.image_tk = ImageTk.PhotoImage(self.image)
+            self.img_label = tk.Label(self, image = self.image_tk)
+            self.was_right = not self.was_right
+
+        self.geometry(f"+{self.x}+{self.y}")
+        if w is not None or h is not None:
+            self.geometry(f"{self.w}x{self.h}")
 
         # summarize button
         self.summarize_button.place(x = 0, y = 0, width = self.w / 5, height = self.sq_button_height)
@@ -171,7 +183,7 @@ class Window(tk.Tk):
         self.quiz_button.place(x = self.w * 4 / 5, y = 0, width = self.w / 5, height = self.sq_button_height)
 
         # close button
-        self.close_button.place(x = 0, y = self.h - 50, width = self.w / 5, height = self.sq_button_height)
+        # self.close_button.place(x = 0, y = self.h - 50, width = self.w / 5, height = self.sq_button_height)
 
         # button get from microphone
         self.mic_button.place(x = self.w / 5, y = self.h - 50, width = self.w / 5, height = self.sq_button_height)
@@ -185,18 +197,24 @@ class Window(tk.Tk):
         # Context title box
         self.context_title.place(x = 3, y = 45, w = self.w - 6, h = 25)
 
-        self.img_label.place(x = self.w - self.icon_size, y = self.h - self.icon_size)
+        # self.img_label.place(x = self.w - self.icon_size, y = self.h - self.icon_size)
 
-        self.output_box.place(x = 3, y = 65, w = self.w - 6, h = (self.h - 2 * self.sq_button_height - 25))
+        self.output_box.place(x = 3, y = 65, w = self.w - 6, h = (self.h - 2 * self.sq_button_height - 25), )
+        # self.output_box.config(highlightbackground='black', highlightthickness=1)
+        if self.is_left:
+            self.img_label.place(x = 0, y = self.h - self.icon_size)
+            self.close_button.place(x = self.w * 4 / 5, y = self.h - 50, width = self.w / 5, height = self.sq_button_height)
+        else:
+            self.img_label.place(x = self.w - self.icon_size, y = self.h - self.icon_size)
+            self.close_button.place(x = 0, y = self.h - 50, width = self.w / 5, height = self.sq_button_height)
+
 
     def close_button_press(self):
         self.messagebox_opening = True
         if messagebox.askokcancel("Quit", "Do you want to quit?"):
             self.end = True
             for t in self.threads:
-                print("t", t)
                 t.join()
-                print("t", t)
             # with open(Window.JSON_NAME, 'w') as f:
             #     json.dump(self.memory.load_memory_variables({}), f)
             with open(Window.PICKLE_NAME, 'wb') as f:
@@ -239,58 +257,40 @@ class Window(tk.Tk):
             # # print("Selected file:", file_path)
             # print(len(documents))
 
-    # def is_click_in_textbox(self, x, y):
-    #     x1, y1, w, h = 3, 65, self.w - 6, (self.h - 2 * self.sq_button_height - 25)
-    #     x2, y2 = x1 + w, y1 + h
-    #     return x1 <= x <= x2 and y1 <= y <= y2
+    def in_textbox(self, x, y, xx, yy):
+        x1, y1, w, h = 0, 10, self.w - 6, (self.h - 2 * self.sq_button_height - 25)
+        x2, y2 = x1 + w, y1 + h
+        print(x1, x, xx, x2, y1, y, yy, y2, "|||||", self.w - 6, (self.h - 2 * self.sq_button_height - 25))
+        return x1 <= x <= x2 and y1 <= y <= y2
 
     def on_button_press(self, event):
         if not self.messagebox_opening:
-            # Capture the initial mouse position and window position
-            self.x = event.x_root
-            self.y = event.y_root
-            self.offset_x = self.winfo_x()
-            self.offset_y = self.winfo_y()
+            if not self.in_textbox(event.x, event.y, event.x_root, event.y_root):
+                self.change_size(w = 400, h = 500)
+                self.output_box.config(font=("Times New Roman", 14))
+                # Capture the initial mouse position and window position
+                self.x = event.x_root
+                self.y = event.y_root
+                self.offset_x = self.winfo_x()
+                self.offset_y = self.winfo_y()
+            else:
+                # print("before:", self.is_up)
+                self.change_size(w = 600, h = 750)
+                self.output_box.config(font=("Times New Roman", 21))
 
     def on_button_motion(self, event):
-        if not self.messagebox_opening:
+        if not self.messagebox_opening and not self.in_textbox(event.x, event.y, event.x_root, event.y_root):
             # Calculate the new window position based on mouse movement
             new_x = self.offset_x + (event.x_root - self.x)
             new_y = self.offset_y + (event.y_root - self.y)
             self.geometry(f"+{new_x}+{new_y}")
 
     def on_button_release(self, event):
-        if not self.messagebox_opening:
-            is_left = event.x_root - event.x + self.w / 2 < self.screen_w / 2
-            is_up = event.y_root - event.y + self.h / 2 < self.screen_h / 2
-
-            new_x = self.padding_w if (is_left) else self.screen_w - self.w - self.padding_w
-            new_y = (
-                self.padding_h + self.addedDistance
-                if (is_up)
-                else self.screen_h - self.h - self.padding_h - self.addedDistance
-            )
-
-            # Move back to each side (vertical and horizontal) and maybe swap
-            if is_left:
-                if self.was_right:
-                    self.img_label.destroy()
-                    self.image = self.image.transpose(Image.FLIP_LEFT_RIGHT)
-                    self.image_tk = ImageTk.PhotoImage(self.image)
-                    self.img_label = tk.Label(self, image = self.image_tk)
-                    self.was_right = not self.was_right
-                self.img_label.place(x = 0, y = self.h - self.icon_size)
-                self.close_button.place(x = self.w * 4 / 5, y = self.h - 50, width = self.w / 5, height = self.sq_button_height)
-            elif not is_left:
-                if not self.was_right:
-                    self.img_label.destroy()
-                    self.image = self.image.transpose(Image.FLIP_LEFT_RIGHT)
-                    self.image_tk = ImageTk.PhotoImage(self.image)
-                    self.img_label = tk.Label(self, image = self.image_tk)
-                    self.was_right = not self.was_right
-                self.img_label.place(x = self.w - self.icon_size, y = self.h - self.icon_size)
-                self.close_button.place(x = 0, y = self.h - 50, width = self.w / 5, height = self.sq_button_height)
-            self.geometry(f"+{new_x}+{new_y}")
+        if not self.messagebox_opening and not self.in_textbox(event.x, event.y, event.x_root, event.y_root):
+            changed = self.is_left != (event.x_root - event.x + self.w / 2 < self.screen_w / 2)
+            self.is_left = event.x_root - event.x < (self.screen_w - self.w) / 2
+            self.is_up = event.y_root - event.y < (self.screen_h - self.h) / 2
+            self.change_size(changed = changed)
 
     def waitAndReturnNewText(self):
         while not self.end:
