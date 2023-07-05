@@ -87,15 +87,14 @@ class Window(tk.Tk):
         self.save = ""
         self.title("EduBuddy")
         self.before_text = 0
-        self.overrideredirect(
-            True
-        )  # Remove window decorations (title, borders, exit & minimize buttons)
+        self.overrideredirect(True)  # Remove window decorations (title, borders, exit & minimize buttons)
         self.attributes("-topmost", True)
         self.messagebox_opening = False
         # screen info
         screen = get_monitors()[0]  # number can be changed ig
         self.screen_w = screen.width
         self.screen_h = screen.height
+        self.is_maximized = False
 
         # Set the window's initial position
         self.padding_w = int(self.screen_w * 0.005)
@@ -108,14 +107,16 @@ class Window(tk.Tk):
         self.show_button = AButton(self, text = "Show", command = self.show_button_press)
         self.save_button = AButton(self, text = "Save", command = self.save_button_press)
         self.quiz_button = AButton(self, text = "Quiz", command = self.quiz_button_press)
-        self.close_button = AButton(self, text = "Close", command = self.close_button_press)
+        # self.close_button = AButton(self, text = "Close", command = self.close_button_press)
         self.mic_button = AButton(self, text = "From Mic", command = asking)
         self.file_button = AButton(self, text = "From File", command = self.file_button_press)
         self.text_button = AButton(self, text = "From Text", command = self.text_button_press)
         self.context_title = tk.Label(self, text = "Context", bg = "lightblue")
-        self.minimize_button = AButton(self, text='Minimize', command=self.minimize_button_press)
+        self.minimize_button = AButton(self, text='-', command=self.minimize_button_press)
+        self.maximize_button = AButton(self, text='+', command=self.maximize_button_press)
+        self.close_button = AButton(self, text = "x", command = self.close_button_press)
         
-        self.icon_size = 60
+        self.icon_size = 45
         script_dir = os.path.dirname(os.path.abspath(__file__))
         image_path = os.path.join(script_dir, "media", "buddy.png")
         self.image = Image.open(image_path)
@@ -145,7 +146,23 @@ class Window(tk.Tk):
         self.quiz_obj = None
         self.quiz_alternative_buttons = [None, None, None, None]
 
+    def maximize_button_press(self):
+        if not self.is_maximized:
+            self.is_maximized = True
+            self.info = (self.is_left, self.is_up, self.w ,self.h)
+            self.is_left = True
+            self.is_up = True
+            self.change_size(w = self.screen_w - 2 * self.padding_w, h = self.screen_h - 2 * self.padding_h- 25, changed = not self.info[0])
+        else:
+            self.is_maximized = False
+            (self.is_left, self.is_up, w ,h) = self.info
+            self.change_size(w = w, h = h, changed = not self.is_left)
+
     def minimize_button_press(self):
+        self.messagebox_opening = True
+        messagebox.showwarning(title = "Minimize warning", message = "Be careful, there will be error if you are using Stage Manager on Mac")
+        self.messagebox_opening = False
+        self.overrideredirect(False)
         self.wm_state('iconic')
 
     def change_size(self, w = None, h = None, changed = None):
@@ -197,6 +214,11 @@ class Window(tk.Tk):
         # button get from text
         self.text_button.place(x = self.w * 3 / 5, y = self.h - 50, width = self.w / 5, height = self.sq_button_height)
 
+        # button minimize
+        self.maximize_button.place(x = -17.5 + (self.w - self.icon_size + self.w * 4 / 5) / 2, y = self.h - 50, width = 35, height = self.sq_button_height / 3)
+        self.minimize_button.place(x = -17.5 + (self.w - self.icon_size + self.w * 4 / 5) / 2, y = self.h - 35, width = 35, height = self.sq_button_height / 3)
+        self.close_button.place(x = -17.5 + (self.w - self.icon_size + self.w * 4 / 5) / 2, y = self.h - 20, width = 35, height = self.sq_button_height / 3)
+
         # Context title box
         self.context_title.place(x = 3, y = 45, w = self.w - 6, h = 25)
 
@@ -206,10 +228,10 @@ class Window(tk.Tk):
         # self.output_box.config(highlightbackground='black', highlightthickness=1)
         if self.is_left:
             self.img_label.place(x = 0, y = self.h - self.icon_size)
-            self.close_button.place(x = self.w * 4 / 5, y = self.h - 50, width = self.w / 5, height = self.sq_button_height)
+            # self.close_button.place(x = self.w * 4 / 5, y = self.h - 50, width = self.w / 5, height = self.sq_button_height)
         else:
             self.img_label.place(x = self.w - self.icon_size, y = self.h - self.icon_size)
-            self.close_button.place(x = 0, y = self.h - 50, width = self.w / 5, height = self.sq_button_height)
+            # self.close_button.place(x = 0, y = self.h - 50, width = self.w / 5, height = self.sq_button_height)
 
 
     def close_button_press(self):
