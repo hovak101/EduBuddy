@@ -30,8 +30,7 @@ Changes to make:
 - icons for all buttons
 - rounded corners
 - smooth animation for expanding/compressing window
-- minimize on click buddy (maybe right click for settings)
-- open close button (and moving it) with messagebox to check if user really want to close
+- Change all text in window based on language
 """
 
 
