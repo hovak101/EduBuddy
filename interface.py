@@ -31,10 +31,12 @@ Changes to make:
 - rounded corners
 - smooth animation for expanding/compressing window
 - Change all text in window based on language
+- Document for other files
 """
 
 
 class Quiz:
+    """Quiz object for iterate questions"""
     def __init__(self, quiz_input_string, num_quiz_questions = 5):
         self.questions = [None for _ in range(num_quiz_questions)]
         lines = quiz_input_string.split("\n")
@@ -58,6 +60,7 @@ class Quiz:
         # self.questions is formatted like this: obj = [{question: "<q>", alternatives: ["alt1", "alt2", "alt3", "alt4"], answer: <0-3>}]
 
 class Window(tk.Tk):
+    """Main window"""
     NUM_QUIZ_QUESTIONS = 5
     JSON_NAME = 'EduBuddy_Memory.json'
     PICKLE_NAME = 'EduBuddy_Memory.pkl'
@@ -147,6 +150,7 @@ class Window(tk.Tk):
         self.quiz_alternative_buttons = [None, None, None, None]
 
     def maximize_button_press(self):
+        """Maximize window"""
         if not self.is_maximized:
             self.is_maximized = True
             self.info = (self.is_left, self.is_up, self.w ,self.h)
@@ -159,6 +163,7 @@ class Window(tk.Tk):
             self.change_size(w = w, h = h, changed = not self.is_left)
 
     def minimize_button_press(self):
+        """Minimize window"""
         self.messagebox_opening = True
         messagebox.showwarning(title = "Minimize warning", message = "Be careful, there will be error if you are using Stage Manager on Mac")
         self.messagebox_opening = False
@@ -166,6 +171,7 @@ class Window(tk.Tk):
         self.wm_state('iconic')
 
     def change_size(self, w = None, h = None, changed = None):
+        """Change size of window, and position of elements if needed"""
         if w is not None:
             self.w = w  # was 200
         if h is not None:
@@ -235,6 +241,7 @@ class Window(tk.Tk):
 
 
     def close_button_press(self):
+        """Close window with message box"""
         self.messagebox_opening = True
         if messagebox.askokcancel("Quit", "Do you want to quit?"):
             self.end = True
@@ -248,6 +255,7 @@ class Window(tk.Tk):
         self.messagebox_opening = False
 
     def file_button_press(self):
+        """Open file(s) to query"""
         self.context_title.config(text = "Read from file(s)")
         self.output_box.configure(state = "disabled")
         file_path = filedialog.askopenfilenames(
@@ -284,11 +292,13 @@ class Window(tk.Tk):
             # print(len(documents))
 
     def in_textbox(self, x, y, xx, yy):
+        """Return true only if the position of mouse is in textbox"""
         x1, y1, w, h = 0, 30, self.w - 6, (self.h - 2 * self.sq_button_height - 25)
         x2, y2 = x1 + w, y1 + h
         return x1 <= x <= x2 and y1 <= y <= y2
 
     def on_button_press(self, event):
+        """Track button press"""
         if not self.messagebox_opening:
             if not self.in_textbox(event.x, event.y, event.x_root, event.y_root):
                 self.change_size(w = 400, h = 500)
@@ -304,6 +314,7 @@ class Window(tk.Tk):
                 self.output_box.config(font = ("Times New Roman", 21))
 
     def on_button_motion(self, event):
+        """Move window with the mouse if it holds"""
         if not self.messagebox_opening and not self.in_textbox(event.x, event.y, event.x_root, event.y_root):
             # Calculate the new window position based on mouse movement
             new_x = self.offset_x + (event.x_root - self.x)
@@ -311,6 +322,7 @@ class Window(tk.Tk):
             self.geometry(f"+{new_x}+{new_y}")
 
     def on_button_release(self, event):
+        """Stick to closest corner when release"""
         if not self.messagebox_opening and not self.in_textbox(event.x, event.y, event.x_root, event.y_root):
             changed = self.is_left != (event.x_root - event.x + self.w / 2 < self.screen_w / 2)
             self.is_left = event.x_root - event.x < (self.screen_w - self.w) / 2
@@ -318,6 +330,7 @@ class Window(tk.Tk):
             self.change_size(changed = changed)
 
     def waitAndReturnNewText(self):
+        """Running in background waiting for pasteboard"""
         while not self.end:
             try:
                 config.text = pyperclip.waitForNewPaste(timeout = 10)
@@ -325,6 +338,7 @@ class Window(tk.Tk):
                 pass
 
     def summarize_button_press(self):
+        """Summarize text in pasteboard"""
         self.output_box.configure(state = "disabled")
         # Destroy old canvas
         try:
@@ -362,6 +376,7 @@ class Window(tk.Tk):
             )
 
     def quiz_button_press(self):
+        """Generate quizzes from pasteboard"""
         # generate title
         self.messagebox_opening = True
         print(self.output_box.get("1.0", tk.END))
@@ -394,6 +409,7 @@ class Window(tk.Tk):
             self.output_box.configure(state = "normal")
 
     def show_button_press(self):
+        """Show memory (saved and unsaved)"""
         self.messagebox_opening = True
         new_window = tk.Toplevel(self)
         new_window.title("Memory")
@@ -406,6 +422,7 @@ class Window(tk.Tk):
         self.messagebox_opening = False
 
     def text_button_press(self):
+        """Answer to text inside textbox from user"""
         text = ' '.join(re.split(" \t\n", self.output_box.get("1.0", "end-1c")[max(0, self.before_text-1):]))
         
         if len(text) >= 2:
@@ -427,6 +444,7 @@ class Window(tk.Tk):
             )
         
     def quiz_iteration(self, quiz_obj):
+        """Iterate through questions in quiz generated and put it nicely in canvas"""
         if len(quiz_obj.questions) == 0:
             self.canvas.destroy()
             self.display_quiz_results()
@@ -477,6 +495,7 @@ class Window(tk.Tk):
         self.canvas.place(x = 0, y = (-100 + 45 * (i + 1)), w = self.w, h = 300)
 
     def quiz_choice(self, event, choice):
+        """Response to users' choices"""
         if choice == self.current_quiz_ans:
             self.current_quiz_score += 1
         for rect, text in self.quiz_alternative_buttons:
@@ -500,6 +519,7 @@ class Window(tk.Tk):
         self.after(ms = 2000, func = lambda: self.quiz_iteration(self.quiz_obj))
 
     def display_quiz_results(self):
+        """Display quiz results"""
         output = (
             f"Quiz results: {self.current_quiz_score}/{Window.NUM_QUIZ_QUESTIONS}:\n\n"
         )
@@ -513,15 +533,18 @@ class Window(tk.Tk):
         self.before_text = len(self.output_box.get("1.0", tk.END))
 
     def save_button_press(self):
+        """Save unsaved memory to saved memory to later save into file"""
         self.output_box.delete("1.0", tk.END)
         self.memory.save_context({"input": f"""Here is a context (remember topic and user's info) for future requests: {self.save}"""},
                                          {"output": f"""Thank you, I will remember and be here for you!"""})
         self.save = ""
 
     def load_data(self, func, val, ret):
+        """Run function and value set from run_gpt function"""
         ret[0] = func(*val)
 
     def run_gpt(self, func, val):
+        """Run complicated functions in another thread"""
         ret = [" "]
         loading_window = LoadingWindow(self, ret)
         thread = Thread(target = self.load_data, args = (func, val, ret))
@@ -531,6 +554,7 @@ class Window(tk.Tk):
         return ret[0]
     
     def erase_button_press(self):
+        """Erase all memory (saved and unsaved and in file)"""
         llm = ChatOpenAI(model_name = "gpt-4", temperature = 0.9)
         self.memory = ConversationSummaryMemory(llm = llm)
         with open(Window.PICKLE_NAME, 'wb') as f:
@@ -538,6 +562,7 @@ class Window(tk.Tk):
         self.save = ""
 
 class LoadingWindow(tk.Toplevel):
+    """Loading window to let user know the system is running"""
     def __init__(self, master, ret):
         super().__init__(master)
         self.ret = ret
@@ -554,6 +579,7 @@ class LoadingWindow(tk.Toplevel):
         t.start()
 
     def update_progress(self):
+        """Update the progress bar and text"""
         i = 0
         while self.ret == [" "]:
             if i != 99:
@@ -572,22 +598,25 @@ class LoadingWindow(tk.Toplevel):
         self.destroy()
 
 class AButton(tk.Button):
+    """A class inherit from tk.Button to change color when move mouse to its region"""
     def __init__(self, master, **kw):
         tk.Button.__init__(self, master = master, highlightbackground = "white", **kw)
         self.bind('<Enter>', self.on_enter)
         self.bind('<Leave>', self.on_leave)
 
     def on_enter(self, e):
+        """Change color to darkgray when the mouse move to its region"""
         self.config(fg = "darkgray", highlightbackground = "darkgray")
 
     def on_leave(self, e):
+        """Change color back to default when the mouse leave"""
         self.config(fg = "black", highlightbackground = "white")
 
-
-threads = []
-window = Window(threads)
-threads = threads
-thread = Thread(target = window.waitAndReturnNewText)
-thread.start()
-threads.append(thread)
-window.mainloop()
+if __name__ == "__main__":
+    threads = []
+    window = Window(threads)
+    threads = threads
+    thread = Thread(target = window.waitAndReturnNewText)
+    thread.start()
+    threads.append(thread)
+    window.mainloop()
