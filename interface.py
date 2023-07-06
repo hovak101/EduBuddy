@@ -100,14 +100,15 @@ class Window(tk.Tk):
         self.padding_w = int(self.screen_w * 0.005)
         self.padding_h = int(self.screen_w * 0.005)
         self.sq_button_height = 45
-
+        self.language = tk.StringVar(self)
+        self.language.set("English")
         # summarize, erase, show, save, quiz, close, microphone, file, text button and textbox
         self.summarize_button = AButton(self, text = "Summarize", command = self.summarize_button_press)
         self.erase_button = AButton(self, text = "Erase", command = self.erase_button_press)
         self.show_button = AButton(self, text = "Show", command = self.show_button_press)
         self.save_button = AButton(self, text = "Save", command = self.save_button_press)
         self.quiz_button = AButton(self, text = "Quiz", command = self.quiz_button_press)
-        # self.close_button = AButton(self, text = "Close", command = self.close_button_press)
+        self.language_button = tk.OptionMenu(self, self.language, "English", "French", "Spanish")#AButton(self, text = "Language", command = self.language_button_press)
         self.mic_button = AButton(self, text = "From Mic", command = asking)
         self.file_button = AButton(self, text = "From File", command = self.file_button_press)
         self.text_button = AButton(self, text = "From Text", command = self.text_button_press)
@@ -203,7 +204,7 @@ class Window(tk.Tk):
         self.quiz_button.place(x = self.w * 4 / 5, y = 0, width = self.w / 5, height = self.sq_button_height)
 
         # close button
-        # self.close_button.place(x = 0, y = self.h - 50, width = self.w / 5, height = self.sq_button_height)
+        # self.language_button.place(x = 0, y = self.h - 50, width = self.w / 5, height = self.sq_button_height)
 
         # button get from microphone
         self.mic_button.place(x = self.w / 5, y = self.h - 50, width = self.w / 5, height = self.sq_button_height)
@@ -228,10 +229,10 @@ class Window(tk.Tk):
         # self.output_box.config(highlightbackground='black', highlightthickness=1)
         if self.is_left:
             self.img_label.place(x = 0, y = self.h - self.icon_size)
-            # self.close_button.place(x = self.w * 4 / 5, y = self.h - 50, width = self.w / 5, height = self.sq_button_height)
+            self.language_button.place(x = self.w * 4 / 5, y = self.h - 50, width = self.w / 5, height = self.sq_button_height)
         else:
             self.img_label.place(x = self.w - self.icon_size, y = self.h - self.icon_size)
-            # self.close_button.place(x = 0, y = self.h - 50, width = self.w / 5, height = self.sq_button_height)
+            self.language_button.place(x = 0, y = self.h - 50, width = self.w / 5, height = self.sq_button_height)
 
 
     def close_button_press(self):
@@ -264,9 +265,10 @@ class Window(tk.Tk):
             self.context_title.config(
                 text = "Enter your question about the file anywhere below"
             )
-            summary = query_engine.query("Summarize all!")
-            print("\n", summary, end = "\n\n")
-            self.save += "(Summary from documents: " + summary + "), "
+            summary = query_engine.query("Summarize key informations in this/ these files!")
+            # print("\n", summary, end = "\n\n")
+            self.output_box.insert(tk.END, f"\n{summary.response}\n")
+            self.save += "(Summary from documents: " + str(summary.response) + "), "
             # response = query_engine.query("Explain me The Schrodinger equation")
             # result = query_engine.query("Why do we need quantum mechanics")
             # answer = query_engine.query("Who is Julia Cook")
