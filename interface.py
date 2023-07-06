@@ -108,13 +108,13 @@ class Window(tk.Tk):
         self.show_button = AButton(self, text = "Show", command = self.show_button_press)
         self.save_button = AButton(self, text = "Save", command = self.save_button_press)
         self.quiz_button = AButton(self, text = "Quiz", command = self.quiz_button_press)
-        self.language_button = tk.OptionMenu(self, self.language, "English", "French", "Spanish")#AButton(self, text = "Language", command = self.language_button_press)
+        self.language_button = tk.OptionMenu(self, self.language, "English", "Italian", "Afrikaans", "Spanish", "German", "French", "Indonesian", "Russian", "Polish", "Ukranian", "Greek", "Latvian", "Mandarin", "Arabic", "Turkish", "Japanese", "Swahili", "Welsh", "Korean", "Icelandic", "Bengali", "Urdu", "Nepali", "Thai", "Punjabi", "Marathi", "Telugu")#AButton(self, text = "Language", command = self.language_button_press)
         self.mic_button = AButton(self, text = "From Mic", command = asking)
         self.file_button = AButton(self, text = "From File", command = self.file_button_press)
         self.text_button = AButton(self, text = "From Text", command = self.text_button_press)
         self.context_title = tk.Label(self, text = "Context", bg = "lightblue")
-        self.minimize_button = AButton(self, text='-', command=self.minimize_button_press)
-        self.maximize_button = AButton(self, text='+', command=self.maximize_button_press)
+        self.minimize_button = AButton(self, text = '-', command = self.minimize_button_press)
+        self.maximize_button = AButton(self, text = '+', command = self.maximize_button_press)
         self.close_button = AButton(self, text = "x", command = self.close_button_press)
         
         self.icon_size = 45
@@ -128,8 +128,8 @@ class Window(tk.Tk):
         self.img_label = tk.Label(self, image = self.image_tk)
 
         # Text output
-        self.output_box = tk.Text(self, borderwidth = 0, highlightthickness = 0, font=("Times New Roman", 14))
-        self.change_size(w=400, h=500)
+        self.output_box = tk.Text(self, borderwidth = 0, highlightthickness = 0, font = ("Times New Roman", 14))
+        self.change_size(w = 400, h = 500)
 
         # # Text input field
         self.output_box.delete("1.0", tk.END)
@@ -226,7 +226,7 @@ class Window(tk.Tk):
         # self.img_label.place(x = self.w - self.icon_size, y = self.h - self.icon_size)
 
         self.output_box.place(x = 3, y = 65, w = self.w - 6, h = (self.h - 2 * self.sq_button_height - 25), )
-        # self.output_box.config(highlightbackground='black', highlightthickness=1)
+        # self.output_box.config(highlightbackground = 'black', highlightthickness = 1)
         if self.is_left:
             self.img_label.place(x = 0, y = self.h - self.icon_size)
             self.language_button.place(x = self.w * 4 / 5, y = self.h - 50, width = self.w / 5, height = self.sq_button_height)
@@ -293,7 +293,7 @@ class Window(tk.Tk):
         if not self.messagebox_opening:
             if not self.in_textbox(event.x, event.y, event.x_root, event.y_root):
                 self.change_size(w = 400, h = 500)
-                self.output_box.config(font=("Times New Roman", 14))
+                self.output_box.config(font = ("Times New Roman", 14))
                 # Capture the initial mouse position and window position
                 self.x = event.x_root
                 self.y = event.y_root
@@ -302,7 +302,7 @@ class Window(tk.Tk):
             else:
                 # print("before:", self.is_up)
                 self.change_size(w = 600, h = 750)
-                self.output_box.config(font=("Times New Roman", 21))
+                self.output_box.config(font = ("Times New Roman", 21))
 
     def on_button_motion(self, event):
         if not self.messagebox_opening and not self.in_textbox(event.x, event.y, event.x_root, event.y_root):
@@ -321,7 +321,7 @@ class Window(tk.Tk):
     def waitAndReturnNewText(self):
         while not self.end:
             try:
-                config.text = pyperclip.waitForNewPaste(timeout=10)
+                config.text = pyperclip.waitForNewPaste(timeout = 10)
             except:
                 pass
 
@@ -336,14 +336,14 @@ class Window(tk.Tk):
         if text != "":
             if len(text.split(" ")) >= 30:
                 # generate title
-                title = tc.getTitleFromText(text)
+                title = tc.getTitleFromText(text, self.language.get())
                 self.context_title.config(
                     text = textwrap.fill(title.split('"')[1], width = self.w - 20)
                 )
                 # generate summary
                 minimumWords = 0
                 maximumWords = tc.getResponseLengthFromText(text)
-                response = self.run_gpt(tc.generateSummaryFromText, (text, minimumWords, maximumWords))
+                response = self.run_gpt(tc.generateSummaryFromText, (text, minimumWords, maximumWords, self.language.get()))
                 # thread = Thread(target = window.waitAndReturnNewText)
                 # thread.start()
                 # self.threads.append(thread)
@@ -376,12 +376,12 @@ class Window(tk.Tk):
             print(len(text), text[:100], )
             if text != "":
                 if len(text.split(" ")) >= 50:
-                    title = tc.getTitleFromText(text)
+                    title = tc.getTitleFromText(text, self.language.get())
                     self.context_title.config(
                         text = textwrap.fill(title.split('"')[1], width = self.w - 20)
                     )
                     # generate quiz
-                    response = self.run_gpt(tc.getMultipleChoiceQuiz, (text, 5))
+                    response = self.run_gpt(tc.getMultipleChoiceQuiz, (text, self.language.get(), 5))
                     self.quiz_obj = Quiz(response, Window.NUM_QUIZ_QUESTIONS)
                     self.quiz_iteration(self.quiz_obj)
                 else:
@@ -410,7 +410,7 @@ class Window(tk.Tk):
         text = ' '.join(re.split(" \t\n", self.output_box.get("1.0", "end-1c")[max(0, self.before_text-1):]))
         
         if len(text) >= 2:
-            str1 = self.run_gpt(tc.sendGptRequest, (text, config.text, self.memory))
+            str1 = self.run_gpt(tc.sendGptRequest, (text, config.text, self.language.get(), self.memory))
             try:
                 output ='\n'.join(str1.split('\n\n')[1:])
                 self.save += "(Q: " + text + " and A: " + str1 + "), "
@@ -525,7 +525,7 @@ class Window(tk.Tk):
     def run_gpt(self, func, val):
         ret = [" "]
         loading_window = LoadingWindow(self, ret)
-        thread = Thread(target=self.load_data, args=(func, val, ret))
+        thread = Thread(target = self.load_data, args = (func, val, ret))
         thread.start()
         loading_window.grab_set()
         self.wait_window(loading_window)
@@ -543,20 +543,23 @@ class LoadingWindow(tk.Toplevel):
         super().__init__(master)
         self.ret = ret
         self.title("Loading")
-        label = tk.Label(self, text="Loading, please wait...")
+        self.string = tk.StringVar(self, "Working on it")
+        label = tk.Label(self, textvariable = self.string)
         label.pack()
-        self.progress = ttk.Progressbar(self, orient=tk.HORIZONTAL, length=200, mode='determinate')
+        self.progress = ttk.Progressbar(self, orient = tk.HORIZONTAL, length = 200, mode = 'determinate')
         self.progress.pack()
-        self.percent = tk.Label(self, text="0%")
+        self.percent = tk.Label(self, text = "0%")
         self.percent.pack()
         # self.update_progress()
-        t = Thread(target=self.update_progress)
+        t = Thread(target = self.update_progress)
         t.start()
 
     def update_progress(self):
         i = 0
         while self.ret == [" "]:
             if i != 99:
+                if not i + 1 % 33:
+                    self.string.set(self.string.get() + '.')
                 self.progress['value'] = i+1
                 self.percent['text'] = f"{i+1}%"
                 self.update_idletasks()
@@ -571,7 +574,7 @@ class LoadingWindow(tk.Toplevel):
 
 class AButton(tk.Button):
     def __init__(self, master, **kw):
-        tk.Button.__init__(self, master=master, highlightbackground = "white", **kw)
+        tk.Button.__init__(self, master = master, highlightbackground = "white", **kw)
         self.bind('<Enter>', self.on_enter)
         self.bind('<Leave>', self.on_leave)
 
