@@ -299,8 +299,17 @@ class Window(tk.Tk):
 
     def on_button_press(self, event):
         """Track button press"""
-        if not self.messagebox_opening:
-            if not self.in_textbox(event.x, event.y, event.x_root, event.y_root):
+        if self.in_textbox(event.x, event.y, event.x_root, event.y_root):
+            if not self.messagebox_opening:
+                self.messagebox_opening = True
+                # print("before:", self.is_up)
+                self.change_size(w = 600, h = 750)
+                self.output_box.config(font = ("Times New Roman", 21))
+                # self.output_box.configure(state = 'disabled')
+                # self.output_box.configure(state = 'normal')
+                # self.output_box.insert(tk.END, "HEY!\n")
+
+        else:
                 self.change_size(w = 400, h = 500)
                 self.output_box.config(font = ("Times New Roman", 14))
                 # Capture the initial mouse position and window position
@@ -308,10 +317,10 @@ class Window(tk.Tk):
                 self.y = event.y_root
                 self.offset_x = self.winfo_x()
                 self.offset_y = self.winfo_y()
-            else:
-                # print("before:", self.is_up)
-                self.change_size(w = 600, h = 750)
-                self.output_box.config(font = ("Times New Roman", 21))
+                self.messagebox_opening = False
+                # self.output_box.configure(state = 'disabled')
+                # self.output_box.configure(state = 'normal')
+                # self.output_box.insert(tk.END, "HEY!\n")
 
     def on_button_motion(self, event):
         """Move window with the mouse if it holds"""
@@ -339,7 +348,7 @@ class Window(tk.Tk):
 
     def summarize_button_press(self):
         """Summarize text in pasteboard"""
-        self.output_box.configure(state = "disabled")
+        # self.output_box.configure(state = "disabled")
         # Destroy old canvas
         try:
             self.canvas.destroy()
@@ -360,20 +369,18 @@ class Window(tk.Tk):
                 # thread = Thread(target = window.waitAndReturnNewText)
                 # thread.start()
                 # self.threads.append(thread)
-                self.output_box.configure(state = "normal")
+                # self.output_box.configure(state = "normal")
                 self.output_box.insert(tk.END, f"\nSummary:\n{response}\n")
                 self.before_text = len(self.output_box.get("1.0", tk.END))
                 self.save += "(Summary: " + response + "), "
             else:
-                self.output_box.configure(state = "normal")
-                self.context_title.config(
-                    text = "Please choose a longer text to summarize"
-                )
+                # self.output_box.configure(state = "normal")
+                self.output_box.insert(tk.END, "\nPlease choose a longer text to summarize\n")
         else:
-            self.output_box.configure(state = "normal")
-            self.context_title.config(
-                text = "No text found! Choose a new text if this keep happens"
-            )
+            # self.output_box.configure(state = "normal")
+            self.output_box.insert(tk.END, "\nNo text found! Choose a new text if this keep happens\n")
+        # self.output_box.configure(state = 'normal')
+        # print(self.messagebox_opening)
 
     def quiz_button_press(self):
         """Generate quizzes from pasteboard"""
@@ -407,6 +414,8 @@ class Window(tk.Tk):
                     text = "No text found! Choose a new text if this keep happens"
                 )
             self.output_box.configure(state = "normal")
+        else:
+            self.messagebox_opening = False
 
     def show_button_press(self):
         """Show memory (saved and unsaved)"""
@@ -600,16 +609,20 @@ class LoadingWindow(tk.Toplevel):
 class AButton(tk.Button):
     """A class inherit from tk.Button to change color when move mouse to its region"""
     def __init__(self, master, **kw):
+        self.master = master
         tk.Button.__init__(self, master = master, highlightbackground = "white", **kw)
         self.bind('<Enter>', self.on_enter)
         self.bind('<Leave>', self.on_leave)
 
     def on_enter(self, e):
         """Change color to darkgray when the mouse move to its region"""
-        self.config(fg = "darkgray", highlightbackground = "darkgray")
+        # print('a')
+        if not self.master.messagebox_opening:
+           self.config(fg = "darkgray", highlightbackground = "darkgray")
 
-    def on_leave(self, e):
+    def on_leave(self, e = None):
         """Change color back to default when the mouse leave"""
+        # if not self.messagebox_opening:
         self.config(fg = "black", highlightbackground = "white")
 
 if __name__ == "__main__":
